@@ -317,6 +317,18 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 			}
 			
+            videoPlayerView.bufferingVideo = { [weak self] in
+                guard let strongSelf = self else { return }
+                
+                strongSelf.progressLoader.startAnimating()
+            }
+            
+            videoPlayerView.bufferingVideoFinished = { [weak self] in
+                guard let strongSelf = self else { return }
+                
+                strongSelf.progressLoader.stopAnimating()
+            }
+            
             videoPlayerView.startedVideo = { [weak self] in
                 guard let strongSelf = self else { return }
                 

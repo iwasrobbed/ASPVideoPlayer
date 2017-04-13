@@ -61,6 +61,10 @@ A simple UIView subclass that can play a video and allows animations to be appli
 		The video is currently being played.
 		*/
 		case playing
+        /**
+        The video is buffering.
+        */
+        case buffering
 		/**
 		The video has been paused.
 		*/
@@ -96,6 +100,16 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	A closure that will be called repeatedly while the video is playing.
 	*/
 	open var playingVideo: ProgressClosure
+    
+    /**
+    A closure that will be called when a video is buffering.
+     */
+    open var bufferingVideo: VoidClosure
+    
+    /**
+    A closure that will be called when a video is finished buffering.
+     */
+    open var bufferingVideoFinished: VoidClosure
 	
 	/**
 	A closure that will be called when a video is paused.
@@ -185,7 +199,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
             videoPlayerLayer.player?.rate = 0.0
             videoPlayerLayer.videoGravity = videoGravity
             
-            addKVObserver(to: firstItem)
+            addKVObservers(to: firstItem)
             notifyOfNewVideo()
         }
     }
@@ -264,6 +278,8 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	private var timeObserver: AnyObject?
     
     private let statusKey = "status"
+    private let playbackBufferEmptyKey = "playbackBufferEmpty"
+    private let playbackLikelyToKeepUpKey = "playbackLikelyToKeepUp"
     private var kvoContext = "AVPlayerItemContext"
 	
 	//MARK: - Superclass methods -
@@ -384,12 +400,39 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	
 	open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard context == &kvoContext,
-              keyPath == statusKey,
+              let aspKeyPath = keyPath,
               let item = object as? AVPlayerItem else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
             return
         }
         
+        switch aspKeyPath {
+        case statusKey:
+            handleStatusChange(for: item)
+        case playbackBufferEmptyKey:
+            bufferingVideo?()
+        case playbackLikelyToKeepUpKey:
+            bufferingVideoFinished?()
+        default:
+           super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+	}
+    
+    fileprivate func addKVObservers(to item: AVPlayerItem?) {
+        guard let item = item else { return }
+        item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
+        item.addObserver(self, forKeyPath: playbackBufferEmptyKey, options: [], context: &kvoContext)
+        item.addObserver(self, forKeyPath: playbackLikelyToKeepUpKey, options: [], context: &kvoContext)
+    }
+    
+    fileprivate func removeKVObservers() {
+        guard let currentItem = videoPlayerLayer.player?.currentItem else { return }
+        currentItem.removeObserver(self, forKeyPath: statusKey)
+        currentItem.removeObserver(self, forKeyPath: playbackBufferEmptyKey)
+        currentItem.removeObserver(self, forKeyPath: playbackLikelyToKeepUpKey)
+    }
+    
+    fileprivate func handleStatusChange(for item: AVPlayerItem) {
         if item.status == .readyToPlay {
             if status == .new {
                 status = .readyToPlay
@@ -404,7 +447,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
         } else if item.status == .failed {
             generateError(message: "Error loading video.")
         }
-	}
+    }
 	
 	//MARK: - Private methods -
     
@@ -440,22 +483,12 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	
 	fileprivate func deinitObservers() {
 		NotificationCenter.default.removeObserver(self)
-		deinitKVObserver()
+		removeKVObservers()
 		if let observer = timeObserver {
 			videoPlayerLayer.player?.removeTimeObserver(observer)
 			timeObserver = nil
 		}
 	}
-    
-    fileprivate func addKVObserver(to item: AVPlayerItem?) {
-        guard let item = item else { return }
-        item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
-    }
-    
-    fileprivate func deinitKVObserver() {
-        guard let currentItem = videoPlayerLayer.player?.currentItem else { return }
-        currentItem.removeObserver(self, forKeyPath: statusKey)
-    }
 	
     @objc internal func itemDidFinishPlaying(_ notification: Notification) {
         guard let notificationItem = notification.object as? AVPlayerItem,
@@ -494,13 +527,13 @@ A simple UIView subclass that can play a video and allows animations to be appli
         
         // Note: using an AVQueuePlayer in this way will allow for seamless looping;
         // using an AVPlayer by itself causes a flash of white/black in between loops
-        deinitKVObserver()
+        removeKVObservers()
         if let currentItem = player.currentItem {
             player.remove(currentItem)
         }
         newItem.seek(to: kCMTimeZero)
         player.insert(newItem, after: nil)
-        addKVObserver(to: newItem)
+        addKVObservers(to: newItem)
         notifyOfNewVideo()
     }
     
