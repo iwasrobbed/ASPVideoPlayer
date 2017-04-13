@@ -191,7 +191,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
                 return
             }
             
-            deinitObservers()
+            removeObservers()
             
             videoItems = urls.map({ AVPlayerItem(url: $0) })
             let firstItem = videoItems.first
@@ -311,7 +311,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	}
 	
 	deinit {
-		deinitObservers()
+		removeObservers()
 	}
 	
 	//MARK: - Public methods -
@@ -330,7 +330,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
 		
 		NotificationCenter.default.removeObserver(self)
 		if let currentItem = videoPlayerLayer.player?.currentItem {
-            NotificationCenter.default.addObserver(self, selector: #selector(itemDidFinishPlaying(_:)) , name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: currentItem)
+            addNotificationObservers(to: currentItem)
 		}
 	}
 	
@@ -480,8 +480,13 @@ A simple UIView subclass that can play a video and allows animations to be appli
 			weakSelf.playingVideo?(weakSelf.progress)
 		}) as AnyObject?
 	}
+    
+    fileprivate func addNotificationObservers(to item: AVPlayerItem) {
+        NotificationCenter.default.addObserver(self, selector: #selector(itemDidFinishPlaying(_:)) , name: .AVPlayerItemDidPlayToEndTime, object: item)
+        NotificationCenter.default.addObserver(self, selector: #selector(itemFailedToPlayToEndTime(_:)), name: .AVPlayerItemFailedToPlayToEndTime, object: item)
+    }
 	
-	fileprivate func deinitObservers() {
+	fileprivate func removeObservers() {
 		NotificationCenter.default.removeObserver(self)
 		removeKVObservers()
 		if let observer = timeObserver {
@@ -505,6 +510,11 @@ A simple UIView subclass that can play a video and allows animations to be appli
 			stopVideo()
 		}
 	}
+    
+    @objc internal func itemFailedToPlayToEndTime(_ notification: Notification) {
+        let errorMessage = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey]
+        generateError(message: "Playback of the video failed. Error: \(String(describing: errorMessage))")
+    }
     
     fileprivate func skipToVideo(at index: Int) {
         guard index < videoItems.count, index >= 0 else {
