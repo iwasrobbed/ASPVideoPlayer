@@ -16,6 +16,11 @@ public protocol VideoPlayerControls {
 	Reference to the video player.
 	*/
 	weak var videoPlayer: ASPVideoPlayerView? {get set}
+    
+    /**
+     The font for the time labels.
+     */
+    var timeFont: UIFont? {get set}
 	
 	/**
 	Starts the video playback.
@@ -129,6 +134,8 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	open var nextButtonHidden: Bool = true
 	open var previousButtonHidden: Bool = true
+    
+    open var timeFont = UIFont(name: "Courier-Bold", size: 12.0)
 }
 
 @IBDesignable open class ASPVideoPlayerControls: ASPBasicControls {
@@ -180,6 +187,16 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 			currentTimeLabel.textColor = tintColor
 		}
 	}
+    
+    /**
+     The font for the time labels.
+     */
+    open override var timeFont: UIFont? {
+        didSet {
+            currentTimeLabel.font = timeFont
+            lengthLabel.font = timeFont
+        }
+    }
 	
 	//MARK: - Private Variables and Constants -
 	
@@ -377,11 +394,11 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		
 		currentTimeLabel.textColor = tintColor
 		currentTimeLabel.textAlignment = .center
-		currentTimeLabel.font = UIFont(name: "Courier-Bold", size: 12.0)
+		currentTimeLabel.font = timeFont
 		
 		lengthLabel.textColor = tintColor
 		lengthLabel.textAlignment = .center
-		lengthLabel.font = UIFont(name: "Courier-Bold", size: 12.0)
+		lengthLabel.font = timeFont
 		
 		playPauseButton.addTarget(self, action: #selector(ASPVideoPlayerControls.playButtonPressed), for: .touchUpInside)
 		nextButton.addTarget(self, action: #selector(ASPVideoPlayerControls.nextButtonPressed), for: .touchUpInside)
