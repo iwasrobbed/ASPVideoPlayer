@@ -131,7 +131,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	open var interacting: ((Bool) -> Void)?
 	open var newVideo: (() -> Void)?
     open var startedVideo: (() -> Void)?
-	open var finishedVideo: (() -> Void)?
 	
 	open var nextButtonHidden: Bool = true
 	open var previousButtonHidden: Bool = true
@@ -293,8 +292,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				
 				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
-				
-				strongSelf.progressLoader.startAnimating()
 			}
 			
             videoPlayerView.readyToPlayVideo = { [weak self] in
@@ -340,12 +337,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
                 
 				strongSelf.playPauseButton.isSelected = false
 				strongSelf.progressSlider.value = 0.0
-			}
-			
-            videoPlayerView.finishedVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
-				strongSelf.finishedVideo?()
 			}
 			
 			videoPlayerView.error = { (error) in

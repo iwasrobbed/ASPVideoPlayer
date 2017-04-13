@@ -85,14 +85,14 @@ class ASPVideoPlayerViewTests: XCTestCase {
 		let player = ASPVideoPlayerView()
 		player.error = { (error) in
 			XCTAssertNil(player.videoURL, "Video URL is nil.")
-			XCTAssertEqual(error.localizedDescription, "Video URL is invalid.")
+			XCTAssertEqual(error.localizedDescription, "Video URL is invalid (can't be nil).")
 			XCTAssertEqual(player.status, ASPVideoPlayerView.PlayerStatus.error)
 		}
 		player.videoURL = invalidVideoURL
 	}
 	
 	func testLoadInvalidURL_ShouldReturnZeroForCurrentTime() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.expectation(description: "Current time should be zero")
 		
 		let player = ASPVideoPlayerView()
 		
@@ -111,7 +111,7 @@ class ASPVideoPlayerViewTests: XCTestCase {
 	}
 	
 	func testLoadInvalidURL_ShouldReturnZeroForVideoLength() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.expectation(description: "Video length should be zero")
 		
 		let player = ASPVideoPlayerView()
 		

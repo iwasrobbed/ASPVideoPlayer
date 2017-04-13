@@ -144,33 +144,51 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	*/
 	open fileprivate(set) var status: PlayerStatus = .new
 	
+    /**
+    The url of the currently playing video.
+     */
+    open var currentVideoURL: URL? {
+        guard let urlAsset = videoPlayerLayer.player?.currentItem?.asset as? AVURLAsset else { return nil }
+        
+        return urlAsset.url
+    }
+    
 	/**
 	The url of the video that should be loaded.
 	*/
 	open var videoURL: URL? = nil {
 		didSet {
-			guard let url = videoURL else {
-				status = .error
-				
-				let userInfo = [NSLocalizedDescriptionKey: "Video URL is invalid."]
-				let videoError = NSError(domain: "com.andreisergiupitis.aspvideoplayer", code: 99, userInfo: userInfo)
-				
-				error?(videoError)
-				return
-			}
-			
-			deinitObservers()
-			
-			videoPlayerLayer.player = AVPlayer(url: url)
-			videoPlayerLayer.player?.rate = 0.0
-			videoPlayerLayer.videoGravity = videoGravity
-			
-			videoPlayerLayer.player?.addObserver(self, forKeyPath: "status", options: [], context: nil)
-			
-			status = .new
-			newVideo?()
+            guard let url = videoURL else {
+                generateError(message: "Video URL is invalid (can't be nil).")
+                return
+            }
+            
+            videoURLs = [url]
 		}
 	}
+    
+    /**
+    The urls of the videos that should be loaded.
+     */
+    open var videoURLs: [URL]? = nil {
+        didSet {
+            guard let urls = videoURLs else {
+                generateError(message: "Video URLs are invalid (can't be nil).")
+                return
+            }
+            
+            deinitObservers()
+            
+            videoItems = urls.map({ AVPlayerItem(url: $0) })
+            let firstItem = videoItems.first
+            videoPlayerLayer.player = AVQueuePlayer(playerItem: firstItem)
+            videoPlayerLayer.player?.rate = 0.0
+            videoPlayerLayer.videoGravity = videoGravity
+            
+            addKVObserver(to: firstItem)
+            notifyOfNewVideo()
+        }
+    }
 	
 	/**
 	The gravity of the video. Adjusts how the video fills the space of the container.
@@ -228,6 +246,14 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	fileprivate(set) var progress: Double = 0.0
 	
 	//MARK: - Private Variables and Constants -
+    
+    private var videoItems = [AVPlayerItem]()
+    
+    private var currentVideoIndex: Int? {
+        guard let currentItem = videoPlayerLayer.player?.currentItem else { return nil }
+        
+        return videoItems.index(of: currentItem)
+    }
 	
 	private let videoPlayerLayer: AVPlayerLayer = AVPlayerLayer()
 	
@@ -236,6 +262,9 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	private var videoGravity: String! = AVLayerVideoGravityResizeAspectFill
 	
 	private var timeObserver: AnyObject?
+    
+    private let statusKey = "status"
+    private var kvoContext = "AVPlayerItemContext"
 	
 	//MARK: - Superclass methods -
 	
@@ -285,7 +314,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
 		
 		NotificationCenter.default.removeObserver(self)
 		if let currentItem = videoPlayerLayer.player?.currentItem {
-			NotificationCenter.default.addObserver(self, selector: #selector(itemDidFinishPlaying(_:)) , name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: currentItem)
+            NotificationCenter.default.addObserver(self, selector: #selector(itemDidFinishPlaying(_:)) , name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: currentItem)
 		}
 	}
 	
@@ -297,6 +326,26 @@ A simple UIView subclass that can play a video and allows animations to be appli
 		status = .paused
 		pausedVideo?()
 	}
+    
+    /**
+    Starts the previous video in the queue from the beginning.
+     */
+    open func playPreviousVideo() {
+        guard let currentVideoIndex = currentVideoIndex else { return }
+        
+        let previousVideoIndex = (currentVideoIndex - 1 + videoItems.count) % videoItems.count
+        skipToVideo(at: previousVideoIndex)
+    }
+    
+    /**
+    Starts the next video in the queue from the beginning.
+     */
+    open func playNextVideo() {
+        guard let currentVideoIndex = currentVideoIndex else { return }
+        
+        let nextVideoIndex = (currentVideoIndex + 1) % videoItems.count
+        skipToVideo(at: nextVideoIndex)
+    }
 	
 	/**
 	Stops the video.
@@ -334,32 +383,39 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	//MARK: - KeyValueObserving methods -
 	
 	open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-		guard let player = object as? AVPlayer, let keyPath = keyPath else { return }
-		
-		if player == videoPlayerLayer.player && keyPath == "status" {
-			if player.status == .readyToPlay {
-				if status == .new {
-					status = .readyToPlay
-				}
-				addTimeObserver()
-				
-				if startPlayingWhenReady == true {
-					playVideo()
-				} else {
-					readyToPlayVideo?()
-				}
-			} else if player.status == .failed {
-				status = .error
-				
-				let userInfo = [NSLocalizedDescriptionKey: "Error loading video."]
-				let videoError = NSError(domain: "com.andreisergiupitis.aspvideoplayer", code: 99, userInfo: userInfo)
-				
-				error?(videoError)
-			}
-		}
+        guard context == &kvoContext,
+              keyPath == statusKey,
+              let item = object as? AVPlayerItem else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+            return
+        }
+        
+        if item.status == .readyToPlay {
+            if status == .new {
+                status = .readyToPlay
+            }
+            addTimeObserver()
+            
+            if startPlayingWhenReady == true {
+                playVideo()
+            } else {
+                readyToPlayVideo?()
+            }
+        } else if item.status == .failed {
+            generateError(message: "Error loading video.")
+        }
 	}
 	
 	//MARK: - Private methods -
+    
+    fileprivate func generateError(message: String) {
+        status = .error
+        
+        let userInfo = [NSLocalizedDescriptionKey: message]
+        let videoError = NSError(domain: "com.andreisergiupitis.aspvideoplayer", code: 99, userInfo: userInfo)
+        
+        error?(videoError)
+    }
 	
 	fileprivate func seekToZero() {
 		progress = 0.0
@@ -384,24 +440,72 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	
 	fileprivate func deinitObservers() {
 		NotificationCenter.default.removeObserver(self)
-		videoPlayerLayer.player?.removeObserver(self, forKeyPath: "status")
+		deinitKVObserver()
 		if let observer = timeObserver {
 			videoPlayerLayer.player?.removeTimeObserver(observer)
 			timeObserver = nil
 		}
 	}
+    
+    fileprivate func addKVObserver(to item: AVPlayerItem?) {
+        guard let item = item else { return }
+        item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
+    }
+    
+    fileprivate func deinitKVObserver() {
+        guard let currentItem = videoPlayerLayer.player?.currentItem else { return }
+        currentItem.removeObserver(self, forKeyPath: statusKey)
+    }
 	
-	@objc internal func itemDidFinishPlaying(_ notification: Notification) {
-		let currentItem = videoPlayerLayer.player?.currentItem
-		let notificationObject = notification.object as! AVPlayerItem
-		
+    @objc internal func itemDidFinishPlaying(_ notification: Notification) {
+        guard let notificationItem = notification.object as? AVPlayerItem,
+              let currentItem = videoPlayerLayer.player?.currentItem,
+              notificationItem == currentItem else { return }
+        
 		finishedVideo?()
-		if currentItem == notificationObject && shouldLoop == true {
-			status = .playing
-			seekToZero()
-			videoPlayerLayer.player?.rate = 1.0
-		} else {
+        
+        if let lastVideoURL = videoURLs?.last, currentVideoURL != lastVideoURL {
+            playNextVideo()
+        } else if shouldLoop {
+            loopFromBeginning()
+        } else {
 			stopVideo()
 		}
 	}
+    
+    fileprivate func skipToVideo(at index: Int) {
+        guard index < videoItems.count, index >= 0 else {
+                stopVideo()
+                return
+        }
+        
+        swapCurrentItem(for: videoItems[index])
+    }
+    
+    fileprivate func loopFromBeginning() {
+        guard let firstVideoItem = videoItems.first else { return }
+        
+        swapCurrentItem(for: firstVideoItem)
+        playVideo()
+    }
+    
+    fileprivate func swapCurrentItem(for newItem: AVPlayerItem) {
+        guard let player = videoPlayerLayer.player as? AVQueuePlayer else { return }
+        
+        // Note: using an AVQueuePlayer in this way will allow for seamless looping;
+        // using an AVPlayer by itself causes a flash of white/black in between loops
+        deinitKVObserver()
+        if let currentItem = player.currentItem {
+            player.remove(currentItem)
+        }
+        newItem.seek(to: kCMTimeZero)
+        player.insert(newItem, after: nil)
+        addKVObserver(to: newItem)
+        notifyOfNewVideo()
+    }
+    
+    fileprivate func notifyOfNewVideo() {
+        status = .new
+        newVideo?()
+    }
 }

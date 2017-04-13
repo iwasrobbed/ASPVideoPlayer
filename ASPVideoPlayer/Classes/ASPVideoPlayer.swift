@@ -48,7 +48,7 @@ A video player implementation with basic functionality.
 	*/
 	open var videoURLs: [URL] = [] {
 		didSet {
-			videoPlayerView.videoURL = videoURLs.first
+			videoPlayerView.videoURLs = videoURLs
 		}
 	}
 	
@@ -108,7 +108,7 @@ A video player implementation with basic functionality.
         videoPlayerControls.newVideo = { [weak self] in
             guard let strongSelf = self else { return }
             
-			if let videoURL = strongSelf.videoPlayerView.videoURL {
+			if let videoURL = strongSelf.videoPlayerView.currentVideoURL {
 				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL) {
 					strongSelf.videoPlayerControls.nextButtonHidden = currentURLIndex == strongSelf.videoURLs.count - 1
 					strongSelf.videoPlayerControls.previousButtonHidden = currentURLIndex == 0
@@ -122,45 +122,16 @@ A video player implementation with basic functionality.
             strongSelf.hideControls()
         }
 		
-        videoPlayerControls.finishedVideo = { [weak self] in
-            guard let strongSelf = self else { return }
-            
-			if let videoURL = strongSelf.videoPlayerView.videoURL {
-				if videoURL == strongSelf.videoURLs.last {
-					if strongSelf.videoPlayerView.shouldLoop == true {
-						strongSelf.videoPlayerView.videoURL = strongSelf.videoURLs.first
-					}
-				} else {
-					let currentURLIndex = strongSelf.videoURLs.index(of: videoURL)
-					let nextURL = strongSelf.videoURLs[currentURLIndex! + 1]
-					
-					strongSelf.videoPlayerView.videoURL = nextURL
-				}
-			}
-		}
-		
         videoPlayerControls.didPressNextButton = { [weak self] in
             guard let strongSelf = self else { return }
             
-			if let videoURL = strongSelf.videoPlayerView.videoURL {
-				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL), currentURLIndex + 1 < strongSelf.videoURLs.count {
-					let nextURL = strongSelf.videoURLs[currentURLIndex + 1]
-					
-					strongSelf.videoPlayerView.videoURL = nextURL
-				}
-			}
+            strongSelf.videoPlayerView.playNextVideo()
 		}
 		
         videoPlayerControls.didPressPreviousButton = { [weak self] in
             guard let strongSelf = self else { return }
             
-			if let videoURL = strongSelf.videoPlayerView.videoURL {
-				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL), currentURLIndex > 0 {
-					let nextURL = strongSelf.videoURLs[currentURLIndex - 1]
-					
-					strongSelf.videoPlayerView.videoURL = nextURL
-				}
-			}
+            strongSelf.videoPlayerView.playPreviousVideo()
 		}
 		
 		videoPlayerControls.interacting = { [weak self] (isInteracting) in
