@@ -24,6 +24,7 @@ class PlayerViewController: UIViewController {
 		videoPlayer.videoURLs = [firstLocalVideoURL!, secondLocalVideoURL!, firstNetworkURL!, secondNetworkURL!]
 		videoPlayer.gravity = .aspectFit
 		videoPlayer.shouldLoop = true
+        videoPlayer.videoPlayerControls.timeFont = UIFont.systemFont(ofSize: 12)
 	}
 	
 }
