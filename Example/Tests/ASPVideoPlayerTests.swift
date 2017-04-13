@@ -39,6 +39,15 @@ class ASPVideoPlayerTests: XCTestCase {
 		XCTAssertEqual(sut.videoPlayerView.shouldLoop, true, "Player shouldLoop not set correctly.")
 	}
 	
+    func testSetVideoURL_ShouldSetVideoURL() {
+        let sut = ASPVideoPlayer()
+        
+        sut.videoURL = videoURL
+        
+        XCTAssertEqual(sut.videoURLs.first, videoURL, "Player URLs not set correctly.")
+        XCTAssertEqual(sut.videoURLs.count, 1, "Player URLs not set correctly.")
+    }
+    
 	func testSetVideoURLs_ShouldSetVideoURLs() {
 		let sut = ASPVideoPlayer()
 		

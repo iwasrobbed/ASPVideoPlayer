@@ -34,6 +34,15 @@ A video player implementation with basic functionality.
 	*/
 	open var fadeDuration = 0.3
 	
+    /**
+     A URL that the player will load. Can be a local or remote URL.
+     */
+    open var videoURL: URL! {
+        didSet {
+            videoURLs = [videoURL]
+        }
+    }
+    
 	/**
 	An array of URLs that the player will load. Can be local or remote URLs.
 	*/
