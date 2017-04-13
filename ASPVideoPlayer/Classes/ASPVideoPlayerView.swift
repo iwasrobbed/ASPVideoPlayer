@@ -146,7 +146,11 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	/**
 	Sets whether the video should loop.
 	*/
-	open var shouldLoop: Bool = false
+    open var shouldLoop: Bool = false {
+        didSet {
+            videoPlayerLayer.player?.actionAtItemEnd = shouldLoop ? .none : .pause
+        }
+    }
 	
 	/**
 	Sets whether the video should start automatically after it has been successfuly loaded.
