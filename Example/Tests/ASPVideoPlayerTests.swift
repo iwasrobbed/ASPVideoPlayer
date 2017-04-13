@@ -66,18 +66,17 @@ class ASPVideoPlayerTests: XCTestCase {
 		XCTAssertEqual(sut.tintColor, sut.videoPlayerControls.tintColor, "Player tint color not set correctly.")
 	}
 	
-	func testControlsVisibleAndPlayerRunningToggleControls_ShouldHideControls() {
+	func testControlsVisibleAndPlayerStarting_ShouldHideControls() {
 		let sut = ASPVideoPlayer()
-		sut.videoURLs = [videoURL]
+		sut.videoURL = videoURL
 		sut.videoPlayerControls.play()
-		sut.toggleControls()
 
 		XCTAssertEqual(sut.videoPlayerControls.alpha, 0.0, "Player controls are visible.")
 	}
 	
 	func testControlsHiddenAndPlayerRunningToggleControls_ShouldShowControls() {
 		let sut = ASPVideoPlayer()
-		sut.videoURLs = [videoURL]
+		sut.videoURL = videoURL
 		sut.videoPlayerControls.play()
 		sut.hideControls()
 		

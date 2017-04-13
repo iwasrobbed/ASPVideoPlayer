@@ -78,7 +78,7 @@ A video player implementation with basic functionality.
 	//MARK: - Private methods -
 	
 	@objc internal func toggleControls() {
-		if videoPlayerControls.alpha == 1.0 && videoPlayerView.status == .playing {
+		if videoPlayerControls.alpha > 0 && videoPlayerView.status == .playing {
 			hideControls()
 		} else {
 			NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(ASPVideoPlayer.hideControls), object: nil)
@@ -91,15 +91,15 @@ A video player implementation with basic functionality.
 	}
 	
 	internal func showControls() {
-		UIView.animate(withDuration: fadeDuration, animations: {
-			self.videoPlayerControls.alpha = 1.0
-		})
+        UIView.animate(withDuration: fadeDuration, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: {
+            self.videoPlayerControls.alpha = 1.0
+        }, completion: nil)
 	}
 	
 	@objc internal func hideControls() {
-		UIView.animate(withDuration: fadeDuration, animations: {
-			self.videoPlayerControls.alpha = 0.0
-		})
+        UIView.animate(withDuration: fadeDuration, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: { 
+            self.videoPlayerControls.alpha = 0.0
+        }, completion: nil)
 	}
 	
 	private func updateControls() {
@@ -115,6 +115,12 @@ A video player implementation with basic functionality.
 				}
 			}
 		}
+        
+        videoPlayerControls.startedVideo = { [weak self] in
+            guard let strongSelf = self else { return }
+            
+            strongSelf.hideControls()
+        }
 		
         videoPlayerControls.finishedVideo = { [weak self] in
             guard let strongSelf = self else { return }

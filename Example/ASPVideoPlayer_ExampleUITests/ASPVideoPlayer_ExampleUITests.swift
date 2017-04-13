@@ -32,6 +32,8 @@ class ASPVideoPlayer_ExampleUITests: XCTestCase {
 		let element = XCUIApplication().children(matching: .window).element(boundBy: 0).children(matching: .other).element.children(matching: .other).element
 		let button = element.children(matching: .other).element(boundBy: 1).children(matching: .button).element(boundBy: 0)
 		button.tap()
+        
+        element.children(matching: .other).element(boundBy: 0).tap()
 
 		XCTAssertEqual(button.isSelected, true, "Button is not selected.")
 	}
@@ -51,6 +53,7 @@ class ASPVideoPlayer_ExampleUITests: XCTestCase {
         startCoordinate.press(forDuration: 0.0, thenDragTo: destinationCoordinate)
 		
 		XCTAssertNotEqual(labelValue.label, "00:00:00", "Values are equal.")
+        XCTAssertNotEqual(labelValue.label, "00:00", "Values are equal.")
 	}
 	
 	func testTapVideo_ShouldHideControls() {
