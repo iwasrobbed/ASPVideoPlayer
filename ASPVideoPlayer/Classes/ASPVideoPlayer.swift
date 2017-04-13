@@ -13,9 +13,9 @@ A video player implementation with basic functionality.
 */
 @IBDesignable open class ASPVideoPlayer: UIView {
 	
-	//MARK: - Private Variables and Constants -
+	//MARK: - Read-Only Variables and Constants -
 	
-	fileprivate var videoPlayerView: ASPVideoPlayerView!
+	open fileprivate(set) var videoPlayerView: ASPVideoPlayerView!
 	
 	//MARK: - Public Variables -
 	
@@ -40,30 +40,6 @@ A video player implementation with basic functionality.
 	open var videoURLs: [URL] = [] {
 		didSet {
 			videoPlayerView.videoURL = videoURLs.first
-		}
-	}
-	
-	/**
-	The gravity of the video. Adjusts how the video fills the space of the container.
-	*/
-	open var gravity: ASPVideoPlayerView.PlayerContentMode {
-		set {
-			videoPlayerView.gravity = newValue
-		}
-		get {
-			return videoPlayerView.gravity
-		}
-	}
-	
-	/**
-	Sets wether the playlist should loop. Once the last video has finished playing, the first one will start.
-	*/
-	open var shouldLoop: Bool {
-		set {
-			videoPlayerView.shouldLoop = newValue
-		}
-		get {
-			return videoPlayerView.shouldLoop
 		}
 	}
 	

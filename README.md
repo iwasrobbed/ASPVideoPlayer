@@ -46,9 +46,12 @@ let secondVideoURL = Bundle.main.url(forResource: "video2", withExtension: "mp4"
 
 videoPlayer.videoURLs = [firstVideoURL!, secondVideoURL!]
 
-videoPlayer.gravity = .aspectFit
+// You can also access all properties and functions using the underlying 
+// `videoPlayerView` property that backs this view (see below for detail)
 
-videoPlayer.shouldLoop = true
+videoPlayer.videoPlayerView.gravity = .aspectFit
+
+videoPlayer.videoPlayerView.shouldLoop = true
 ```
 
 ### 2. ASPVideoPlayerView

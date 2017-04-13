@@ -26,17 +26,17 @@ class ASPVideoPlayerTests: XCTestCase {
 	func testSetGravity_ShouldSetGravity() {
 		let sut = ASPVideoPlayer()
 		
-		sut.gravity = .resize
+		sut.videoPlayerView.gravity = .resize
 		
-		XCTAssertEqual(sut.gravity, .resize, "Player gravity not set correctly.")
+		XCTAssertEqual(sut.videoPlayerView.gravity, .resize, "Player gravity not set correctly.")
 	}
 	
 	func testSetShouldLoop_ShouldSetShouldLoop() {
 		let sut = ASPVideoPlayer()
 		
-		sut.shouldLoop = true
+		sut.videoPlayerView.shouldLoop = true
 		
-		XCTAssertEqual(sut.shouldLoop, true, "Player shouldLoop not set correctly.")
+		XCTAssertEqual(sut.videoPlayerView.shouldLoop, true, "Player shouldLoop not set correctly.")
 	}
 	
 	func testSetVideoURLs_ShouldSetVideoURLs() {

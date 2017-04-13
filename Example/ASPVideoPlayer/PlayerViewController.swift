@@ -22,8 +22,8 @@ class PlayerViewController: UIViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		videoPlayer.videoURLs = [firstLocalVideoURL!, secondLocalVideoURL!, firstNetworkURL!, secondNetworkURL!]
-		videoPlayer.gravity = .aspectFit
-		videoPlayer.shouldLoop = true
+		videoPlayer.videoPlayerView.gravity = .aspectFit
+		videoPlayer.videoPlayerView.shouldLoop = true
         videoPlayer.videoPlayerControls.timeFont = UIFont.systemFont(ofSize: 12)
 	}
 	
