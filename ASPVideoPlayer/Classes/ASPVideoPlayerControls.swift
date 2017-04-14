@@ -16,11 +16,11 @@ public protocol VideoPlayerControls {
 	Reference to the video player.
 	*/
 	weak var videoPlayer: ASPVideoPlayerView? {get set}
-    
-    /**
-     The font for the time labels.
-     */
-    var timeFont: UIFont? {get set}
+	
+	/**
+	The font for the time labels.
+	*/
+	var timeFont: UIFont? {get set}
 	
 	/**
 	Starts the video playback.
@@ -130,12 +130,12 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	open var interacting: ((Bool) -> Void)?
 	open var newVideo: (() -> Void)?
-    open var startedVideo: (() -> Void)?
+	open var startedVideo: (() -> Void)?
 	
 	open var nextButtonHidden: Bool = true
 	open var previousButtonHidden: Bool = true
-    
-    open var timeFont = UIFont(name: "Courier-Bold", size: 12.0)
+	
+	open var timeFont = UIFont(name: "Courier-Bold", size: 12.0)
 }
 
 @IBDesignable open class ASPVideoPlayerControls: ASPBasicControls {
@@ -187,16 +187,16 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 			currentTimeLabel.textColor = tintColor
 		}
 	}
-    
-    /**
-     The font for the time labels.
-     */
-    open override var timeFont: UIFont? {
-        didSet {
-            currentTimeLabel.font = timeFont
-            lengthLabel.font = timeFont
-        }
-    }
+	
+	/**
+	The font for the time labels.
+	*/
+	open override var timeFont: UIFont? {
+		didSet {
+			currentTimeLabel.font = timeFont
+			lengthLabel.font = timeFont
+		}
+	}
 	
 	//MARK: - Private Variables and Constants -
 	
@@ -281,8 +281,8 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	private func setupVideoPlayerView() {
 		if let videoPlayerView = videoPlayer {
 			videoPlayerView.newVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
+				guard let strongSelf = self else { return }
+				
 				strongSelf.newVideo?()
 				
 				strongSelf.progressSlider.isUserInteractionEnabled = false
@@ -294,9 +294,9 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
 			}
 			
-            videoPlayerView.readyToPlayVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
+			videoPlayerView.readyToPlayVideo = { [weak self] in
+				guard let strongSelf = self else { return }
+				
 				strongSelf.progressSlider.isUserInteractionEnabled = true
 				
 				let currentTime = videoPlayerView.currentTime
@@ -307,8 +307,8 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 			}
 			
 			videoPlayerView.playingVideo = { [weak self] (progress) in
-                guard let strongSelf = self else { return }
-                
+				guard let strongSelf = self else { return }
+				
 				if strongSelf.isInteracting == false {
 					strongSelf.progressSlider.value = CGFloat(progress)
 				}
@@ -317,25 +317,25 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 			}
 			
-            videoPlayerView.bufferingVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
-                strongSelf.progressLoader.startAnimating()
-            }
-            
-            videoPlayerView.bufferingVideoFinished = { [weak self] in
-                guard let strongSelf = self else { return }
-                
-                strongSelf.progressLoader.stopAnimating()
-            }
-            
-            videoPlayerView.startedVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
-                strongSelf.startedVideo?()
-                
+			videoPlayerView.bufferingVideo = { [weak self] in
+				guard let strongSelf = self else { return }
+				
+				strongSelf.progressLoader.startAnimating()
+			}
+			
+			videoPlayerView.bufferingVideoFinished = { [weak self] in
+				guard let strongSelf = self else { return }
+				
+				strongSelf.progressLoader.stopAnimating()
+			}
+			
+			videoPlayerView.startedVideo = { [weak self] in
+				guard let strongSelf = self else { return }
+				
+				strongSelf.startedVideo?()
+				
 				strongSelf.progressSlider.isUserInteractionEnabled = true
-                strongSelf.playPauseButton.isSelected = true
+				strongSelf.playPauseButton.isSelected = true
 				
 				let currentTime = videoPlayerView.currentTime
 				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(videoPlayerView.videoLength))
@@ -344,9 +344,9 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				strongSelf.progressLoader.stopAnimating()
 			}
 			
-            videoPlayerView.stoppedVideo = { [weak self] in
-                guard let strongSelf = self else { return }
-                
+			videoPlayerView.stoppedVideo = { [weak self] in
+				guard let strongSelf = self else { return }
+				
 				strongSelf.playPauseButton.isSelected = false
 				strongSelf.progressSlider.value = 0.0
 			}
@@ -355,15 +355,15 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				print(error)
 			}
 			
-            videoPlayerView.seekStarted = { [weak self] in
-                guard let strongSelf = self else { return }
-                
+			videoPlayerView.seekStarted = { [weak self] in
+				guard let strongSelf = self else { return }
+				
 				strongSelf.progressLoader.startAnimating()
 			}
 			
-            videoPlayerView.seekEnded = { [weak self] in
-                guard let strongSelf = self else { return }
-                
+			videoPlayerView.seekEnded = { [weak self] in
+				guard let strongSelf = self else { return }
+				
 				strongSelf.progressLoader.stopAnimating()
 			}
 		}
@@ -374,11 +374,11 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		let minutes = (totalSeconds / 60) % 60
 		let hours = totalSeconds / 3600
 		
-        if hours != 0 {
-            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            return String(format: "%02d:%02d", minutes, seconds)
-        }
+		if hours != 0 {
+			return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+		} else {
+			return String(format: "%02d:%02d", minutes, seconds)
+		}
 	}
 	
 	private func commonInit() {
