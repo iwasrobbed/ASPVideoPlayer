@@ -24,7 +24,6 @@ import UIKit
      */
     open var videoPlayerControls: ASPBasicControls? {
         didSet {
-            videoPlayerControls?.videoPlayer = videoPlayerView
             updateControls()
         }
     }
@@ -156,20 +155,20 @@ import UIKit
         tapGestureRecognizer.delegate = self
         addGestureRecognizer(tapGestureRecognizer)
         
-        let playerView = ASPVideoPlayerView()
-        videoPlayerView = playerView
-        let controlsView = ASPVideoPlayerControls(videoPlayer: playerView)
-        videoPlayerControls = controlsView
+        videoPlayerView = ASPVideoPlayerView()
+        guard let videoPlayerView = videoPlayerView else { return }
         
-        playerView.translatesAutoresizingMaskIntoConstraints = false
-        controlsView.translatesAutoresizingMaskIntoConstraints = false
+        // Note: the controls closures will be set as part of the instantiation
+        // so there's no need to explicitly call `updateControls`
+        videoPlayerControls = ASPVideoPlayerControls(videoPlayer: videoPlayerView)
+        guard let videoPlayerControls = videoPlayerControls else { return }
         
-        controlsView.backgroundColor = UIColor.black.withAlphaComponent(0.15)
-        
-        updateControls()
-        
-        addSubview(playerView)
-        addSubview(controlsView)
+        videoPlayerView.translatesAutoresizingMaskIntoConstraints = false
+        videoPlayerControls.translatesAutoresizingMaskIntoConstraints = false
+        videoPlayerControls.backgroundColor = UIColor.black.withAlphaComponent(0.15)
+
+        addSubview(videoPlayerView)
+        addSubview(videoPlayerControls)
         
         setupLayout()
     }

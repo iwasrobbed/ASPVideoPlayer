@@ -123,19 +123,76 @@ public extension VideoPlayerControls {
 Base class for the video controls.
 */
 open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControls {
+	
+	//MARK: - Base class variables -
+	
 	@IBOutlet open weak var videoPlayer: ASPVideoPlayerView?
 	
-	open var didPressNextButton: (() -> Void)?
-	open var didPressPreviousButton: (() -> Void)?
+	public typealias VoidClosure = () -> ()
+	public typealias BoolClosure = (Bool) -> ()
 	
-	open var interacting: ((Bool) -> Void)?
-	open var newVideo: (() -> Void)?
-	open var startedVideo: (() -> Void)?
+	open var didPressNextButton: VoidClosure? {
+		didSet {
+			guard let closure = didPressNextButton else {
+				didPressNextButtonClosures.removeAll()
+				return
+			}
+			didPressNextButtonClosures.append(closure)
+		}
+	}
+	
+	open var didPressPreviousButton: VoidClosure? {
+		didSet {
+			guard let closure = didPressPreviousButton else {
+				didPressPreviousButtonClosures.removeAll()
+				return
+			}
+			didPressPreviousButtonClosures.append(closure)
+		}
+	}
+	
+	open var interacting: BoolClosure? {
+		didSet {
+			guard let closure = interacting else {
+				interactingClosures.removeAll()
+				return
+			}
+			interactingClosures.append(closure)
+		}
+	}
+	
+	open var newVideo: VoidClosure? {
+		didSet {
+			guard let closure = newVideo else {
+				newVideoClosures.removeAll()
+				return
+			}
+			newVideoClosures.append(closure)
+		}
+	}
+	
+	open var startedVideo: VoidClosure? {
+		didSet {
+			guard let closure = startedVideo else {
+				startedVideoClosures.removeAll()
+				return
+			}
+			startedVideoClosures.append(closure)
+		}
+	}
 	
 	open var nextButtonHidden: Bool = true
 	open var previousButtonHidden: Bool = true
 	
 	open var timeFont = UIFont(name: "Courier-Bold", size: 12.0)
+	
+	//MARK: - Base class private variables -
+	
+	fileprivate var didPressNextButtonClosures = [VoidClosure]()
+	fileprivate var didPressPreviousButtonClosures = [VoidClosure]()
+	fileprivate var interactingClosures = [BoolClosure]()
+	fileprivate var newVideoClosures = [VoidClosure]()
+	fileprivate var startedVideoClosures = [VoidClosure]()
 }
 
 @IBDesignable open class ASPVideoPlayerControls: ASPBasicControls {
@@ -211,7 +268,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	@objc internal var isInteracting: Bool = false {
 		didSet {
-			interacting?(isInteracting)
+			notifyOfInteracting(isInteracting)
 		}
 	}
 	
@@ -256,12 +313,12 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	@objc internal func nextButtonPressed() {
 		isInteracting = false
-		didPressNextButton?()
+		notifyOfDidPressNextButton()
 	}
 	
 	@objc internal func previousButtonPressed() {
 		isInteracting = false
-		didPressPreviousButton?()
+		notifyOfDidPressPreviousButton()
 	}
 	
 	@objc internal func progressSliderBeginTouch() {
@@ -279,98 +336,101 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	}
 	
 	private func setupVideoPlayerView() {
-		if let videoPlayerView = videoPlayer {
-			videoPlayerView.newVideo = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.newVideo?()
-				
-				strongSelf.progressSlider.isUserInteractionEnabled = false
-				
-				strongSelf.progressLoader.startAnimating()
-				strongSelf.progressSlider.value = 0.0
-				
-				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
-				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
+		guard let videoPlayerView = videoPlayer else { return }
+		
+		// Note: if you access `videoPlayerView` within itself below, 
+		// it needs to be weakified first to avoid a retain cycle
+		
+		videoPlayerView.newVideo = { [weak self] in
+			guard let strongSelf = self else { return }
+			
+			strongSelf.notifyOfNewVideo()
+			
+			strongSelf.progressSlider.isUserInteractionEnabled = false
+			
+			strongSelf.progressLoader.startAnimating()
+			strongSelf.progressSlider.value = 0.0
+			
+			strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
+			strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
+		}
+		
+		videoPlayerView.readyToPlayVideo = { [weak self, weak videoPlayerView] in
+			guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
+			
+			strongSelf.progressSlider.isUserInteractionEnabled = true
+			
+			let currentTime = strongVideoPlayerView.currentTime
+			strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
+			strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
+			
+			strongSelf.progressLoader.stopAnimating()
+		}
+		
+		videoPlayerView.playingVideo = { [weak self, weak videoPlayerView] (progress) in
+			guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
+			
+			if strongSelf.isInteracting == false {
+				strongSelf.progressSlider.value = CGFloat(progress)
 			}
 			
-			videoPlayerView.readyToPlayVideo = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
-				
-				strongSelf.progressSlider.isUserInteractionEnabled = true
-				
-				let currentTime = strongVideoPlayerView.currentTime
-				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
-				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
-				
-				strongSelf.progressLoader.stopAnimating()
-			}
+			let currentTime = strongVideoPlayerView.currentTime
+			strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
+			strongSelf.progressLoader.stopAnimating()
+		}
+		
+		videoPlayerView.bufferingVideo = { [weak self] in
+			guard let strongSelf = self else { return }
 			
-			videoPlayerView.playingVideo = { [weak self, weak videoPlayerView] (progress) in
-				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
-				
-				if strongSelf.isInteracting == false {
-					strongSelf.progressSlider.value = CGFloat(progress)
-				}
-				
-				let currentTime = strongVideoPlayerView.currentTime
-				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
-                strongSelf.progressLoader.stopAnimating()
-			}
+			strongSelf.progressLoader.startAnimating()
+		}
+		
+		videoPlayerView.bufferingVideoFinished = { [weak self] in
+			guard let strongSelf = self else { return }
 			
-			videoPlayerView.bufferingVideo = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.progressLoader.startAnimating()
-			}
+			strongSelf.progressLoader.stopAnimating()
+		}
+		
+		videoPlayerView.startedVideo = { [weak self, weak videoPlayerView] in
+			guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
 			
-			videoPlayerView.bufferingVideoFinished = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.progressLoader.stopAnimating()
-			}
+			strongSelf.notifyOfStartedVideo()
 			
-			videoPlayerView.startedVideo = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
-				
-				strongSelf.startedVideo?()
-				
-				strongSelf.progressSlider.isUserInteractionEnabled = true
-				strongSelf.playPauseButton.isSelected = true
-				
-				let currentTime = strongVideoPlayerView.currentTime
-				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
-				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
-				
-				strongSelf.progressLoader.stopAnimating()
-			}
+			strongSelf.progressSlider.isUserInteractionEnabled = true
+			strongSelf.playPauseButton.isSelected = true
 			
-			videoPlayerView.stoppedVideo = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.playPauseButton.isSelected = false
-				strongSelf.progressSlider.value = 0.0
-                strongSelf.progressLoader.stopAnimating()
-			}
+			let currentTime = strongVideoPlayerView.currentTime
+			strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
+			strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 			
-			videoPlayerView.error = { [weak self, weak videoPlayerView] (error) in
-                guard let strongSelf = self else { return }
-                
-                strongSelf.progressLoader.stopAnimating()
-				print(error)
-			}
+			strongSelf.progressLoader.stopAnimating()
+		}
+		
+		videoPlayerView.stoppedVideo = { [weak self] in
+			guard let strongSelf = self else { return }
 			
-			videoPlayerView.seekStarted = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.progressLoader.startAnimating()
-			}
+			strongSelf.playPauseButton.isSelected = false
+			strongSelf.progressSlider.value = 0.0
+			strongSelf.progressLoader.stopAnimating()
+		}
+		
+		videoPlayerView.error = { [weak self] (error) in
+			guard let strongSelf = self else { return }
 			
-			videoPlayerView.seekEnded = { [weak self, weak videoPlayerView] in
-				guard let strongSelf = self else { return }
-				
-				strongSelf.progressLoader.stopAnimating()
-			}
+			strongSelf.progressLoader.stopAnimating()
+			print(error)
+		}
+		
+		videoPlayerView.seekStarted = { [weak self] in
+			guard let strongSelf = self else { return }
+			
+			strongSelf.progressLoader.startAnimating()
+		}
+		
+		videoPlayerView.seekEnded = { [weak self] in
+			guard let strongSelf = self else { return }
+			
+			strongSelf.progressLoader.stopAnimating()
 		}
 	}
 	
@@ -470,4 +530,27 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		
 		addConstraints(constraintsArray)
 	}
+	
+	//MARK: - Closure notifications -
+	
+	fileprivate func notifyOfDidPressNextButton() {
+		didPressNextButtonClosures.forEach({ $0() })
+	}
+	
+	fileprivate func notifyOfDidPressPreviousButton() {
+		didPressPreviousButtonClosures.forEach({ $0() })
+	}
+	
+	fileprivate func notifyOfInteracting(_ interacting: Bool) {
+		interactingClosures.forEach({ $0(interacting) })
+	}
+	
+	fileprivate func notifyOfNewVideo() {
+		newVideoClosures.forEach({ $0() })
+	}
+	
+	fileprivate func notifyOfStartedVideo() {
+		startedVideoClosures.forEach({ $0() })
+	}
+	
 }

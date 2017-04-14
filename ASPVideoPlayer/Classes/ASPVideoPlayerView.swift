@@ -18,21 +18,21 @@ import AVFoundation
     //MARK: - Type definitions -
     
     /**
-     Basic closure type.
+     Void closure type.
      */
-    public typealias VoidClosure = (() -> Void)?
+    public typealias VoidClosure = () -> ()
     
     /**
      Closure type for recurring actions.
      - Parameter progress: The progress indicator value. Value is in range [0.0, 1.0].
      */
-    public typealias ProgressClosure = ((_ progress: Double) -> Void)?
+    public typealias ProgressClosure = (_ progress: Double) -> ()
     
     /**
      Closure type for error handling.
      - Parameter error: The error that occured.
      */
-    public typealias ErrorClosure = ((_ error: NSError) -> Void)?
+    public typealias ErrorClosure = (_ error: NSError) -> ()
     
     //MARK: - Enumerations -
     
@@ -82,64 +82,184 @@ import AVFoundation
     //MARK: - Closures -
     
     /**
-     A closure that will be called when a new video is loaded.
+     Enqueues a closure that will be called when a new video is loaded.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var newVideo: VoidClosure
+    open var newVideo: VoidClosure? {
+        didSet {
+            guard let closure = newVideo else {
+                newVideoClosures.removeAll()
+                return
+            }
+            newVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when the video is ready to play.
+     Enqueues a closure that will be called when the video is ready to play.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var readyToPlayVideo: VoidClosure
+    open var readyToPlayVideo: VoidClosure? {
+        didSet {
+            guard let closure = readyToPlayVideo else {
+                readyToPlayVideoClosures.removeAll()
+                return
+            }
+            readyToPlayVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a video is started.
+     Enqueues a closure that will be called when a video is started.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var startedVideo: VoidClosure
+    open var startedVideo: VoidClosure? {
+        didSet {
+            guard let closure = startedVideo else {
+                startedVideoClosures.removeAll()
+                return
+            }
+            startedVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called repeatedly while the video is playing.
+     Enqueues a closure that will be called repeatedly while the video is playing.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var playingVideo: ProgressClosure
+    open var playingVideo: ProgressClosure? {
+        didSet {
+            guard let closure = playingVideo else {
+                playingVideoClosures.removeAll()
+                return
+            }
+            playingVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a video is buffering.
+     Enqueues a closure that will be called when a video is buffering.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var bufferingVideo: VoidClosure
+    open var bufferingVideo: VoidClosure? {
+        didSet {
+            guard let closure = bufferingVideo else {
+                bufferingVideoClosures.removeAll()
+                return
+            }
+            bufferingVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a video is finished buffering.
+     Enqueues a closure that will be called when a video is finished buffering.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var bufferingVideoFinished: VoidClosure
+    open var bufferingVideoFinished: VoidClosure? {
+        didSet {
+            guard let closure = bufferingVideoFinished else {
+                bufferingVideoFinishedClosures.removeAll()
+                return
+            }
+            bufferingVideoFinishedClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a video is paused.
+     Enqueues a closure that will be called when a video is paused.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var pausedVideo: VoidClosure
+    open var pausedVideo: VoidClosure? {
+        didSet {
+            guard let closure = pausedVideo else {
+                pausedVideoClosures.removeAll()
+                return
+            }
+            pausedVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when the end of the video has been reached.
+     Enqueues a closure that will be called when the end of the video has been reached.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var finishedVideo: VoidClosure
+    open var finishedVideo: VoidClosure? {
+        didSet {
+            guard let closure = finishedVideo else {
+                finishedVideoClosures.removeAll()
+                return
+            }
+            finishedVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a video is stopped.
+     Enqueues a closure that will be called when a video is stopped.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var stoppedVideo: VoidClosure
+    open var stoppedVideo: VoidClosure? {
+        didSet {
+            guard let closure = stoppedVideo else {
+                stoppedVideoClosures.removeAll()
+                return
+            }
+            stoppedVideoClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a seek is triggered.
+     Enqueues a closure that will be called when a seek is triggered.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var seekStarted: VoidClosure
+    open var seekStarted: VoidClosure? {
+        didSet {
+            guard let closure = seekStarted else {
+                seekStartedClosures.removeAll()
+                return
+            }
+            seekStartedClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when a seek has ended.
+     Enqueues a closure that will be called when a seek has ended.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var seekEnded: VoidClosure
+    open var seekEnded: VoidClosure? {
+        didSet {
+            guard let closure = seekEnded else {
+                seekEndedClosures.removeAll()
+                return
+            }
+            seekEndedClosures.append(closure)
+        }
+    }
     
     /**
-     A closure that will be called when an error occured.
+     Enqueues a closure that will be called when an error occured.
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
      */
-    open var error: ErrorClosure
+    open var error: ErrorClosure? {
+        didSet {
+            guard let closure = error else {
+                errorClosures.removeAll()
+                return
+            }
+            errorClosures.append(closure)
+        }
+    }
     
     //MARK: - Public Variables -
     
@@ -280,6 +400,19 @@ import AVFoundation
     
     //MARK: - Private Variables and Constants -
     
+    private var newVideoClosures = [VoidClosure]()
+    private var readyToPlayVideoClosures = [VoidClosure]()
+    private var startedVideoClosures = [VoidClosure]()
+    private var playingVideoClosures = [ProgressClosure]()
+    private var bufferingVideoClosures = [VoidClosure]()
+    private var bufferingVideoFinishedClosures = [VoidClosure]()
+    private var pausedVideoClosures = [VoidClosure]()
+    private var finishedVideoClosures = [VoidClosure]()
+    private var stoppedVideoClosures = [VoidClosure]()
+    private var seekStartedClosures = [VoidClosure]()
+    private var seekEndedClosures = [VoidClosure]()
+    private var errorClosures = [ErrorClosure]()
+    
     private var videoItems = [AVPlayerItem]()
     
     private var currentVideoIndex: Int? {
@@ -349,7 +482,7 @@ import AVFoundation
         
         status = .playing
         videoPlayerLayer.player?.rate = 1.0
-        startedVideo?()
+        notifyOfStartedVideo()
         
         NotificationCenter.default.removeObserver(self)
         if let currentItem = videoPlayerLayer.player?.currentItem {
@@ -363,7 +496,7 @@ import AVFoundation
     open func pauseVideo() {
         videoPlayerLayer.player?.rate = 0.0
         status = .paused
-        pausedVideo?()
+        notifyOfPausedVideo()
     }
     
     /**
@@ -393,7 +526,7 @@ import AVFoundation
         videoPlayerLayer.player?.rate = 0.0
         seekToZero()
         status = .stopped
-        stoppedVideo?()
+        notifyOfStoppedVideo()
     }
     
     /**
@@ -404,16 +537,16 @@ import AVFoundation
         if let currentItem = videoPlayerLayer.player?.currentItem {
             if progress == 0.0 {
                 seekToZero()
-                playingVideo?(progress)
+                notifyOfPlayingVideo(progress)
             } else {
                 let time = CMTime(seconds: progress * currentItem.asset.duration.seconds, preferredTimescale: currentItem.asset.duration.timescale)
                 videoPlayerLayer.player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: { [weak self] (finished) in
                     guard let strongSelf = self else { return }
                     if finished == false {
-                        strongSelf.seekStarted?()
+                        strongSelf.notifyOfSeekStarted()
                     } else {
-                        strongSelf.seekEnded?()
-                        strongSelf.playingVideo?(strongSelf.progress)
+                        strongSelf.notifyOfSeekEnded()
+                        strongSelf.notifyOfPlayingVideo(strongSelf.progress)
                     }
                 })
             }
@@ -435,9 +568,9 @@ import AVFoundation
         case statusKey:
             handleStatusChange(for: item)
         case playbackBufferEmptyKey:
-            bufferingVideo?()
+            notifyOfBufferingVideo()
         case playbackLikelyToKeepUpKey:
-            bufferingVideoFinished?()
+            notifyOfBufferingVideoFinished()
         default:
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
@@ -469,7 +602,7 @@ import AVFoundation
             if startPlayingWhenReady == true {
                 playVideo()
             } else {
-                readyToPlayVideo?()
+                notifyOfReadyToPlayVideo()
             }
         } else if item.status == .failed {
             generateError(message: "Error loading video.")
@@ -516,7 +649,7 @@ import AVFoundation
         let userInfo = [NSLocalizedDescriptionKey: message]
         let videoError = NSError(domain: "com.andreisergiupitis.aspvideoplayer", code: 99, userInfo: userInfo)
         
-        error?(videoError)
+        notifyOfError(videoError)
     }
     
     fileprivate func seekToZero() {
@@ -536,7 +669,7 @@ import AVFoundation
             let currentTime = time.seconds
             strongSelf.progress = currentTime / (strongSelf.videoLength != 0.0 ? strongSelf.videoLength : 1.0)
             
-            strongSelf.playingVideo?(strongSelf.progress)
+            strongSelf.notifyOfPlayingVideo(strongSelf.progress)
         }) as AnyObject?
     }
     
@@ -560,7 +693,7 @@ import AVFoundation
               notificationItem == currentItem
             else { return }
         
-        finishedVideo?()
+        notifyOfFinishedVideo()
         
         if let lastVideoURL = videoURLs?.last, currentVideoURL != lastVideoURL {
             playNextVideo()
@@ -607,8 +740,55 @@ import AVFoundation
         notifyOfNewVideo()
     }
     
+    //MARK: - Closure notifications -
+    
     fileprivate func notifyOfNewVideo() {
         status = .new
-        newVideo?()
+        newVideoClosures.forEach({ $0() })
     }
+    
+    fileprivate func notifyOfReadyToPlayVideo() {
+        readyToPlayVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfStartedVideo() {
+        startedVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfPlayingVideo(_ progress: Double) {
+        playingVideoClosures.forEach({ $0(progress) })
+    }
+    
+    fileprivate func notifyOfBufferingVideo() {
+        bufferingVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfBufferingVideoFinished() {
+        bufferingVideoFinishedClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfPausedVideo() {
+        pausedVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfFinishedVideo() {
+        finishedVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfStoppedVideo() {
+        stoppedVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfSeekStarted() {
+        seekStartedClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfSeekEnded() {
+        seekEndedClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfError(_ error: NSError) {
+        errorClosures.forEach({ $0(error) })
+    }
+
 }
