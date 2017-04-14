@@ -52,6 +52,34 @@ open class Loader: UIView {
      Starts the loader animation.
      */
     open func startAnimating() {
+        shouldStopAnimating = false
+        let item = DispatchWorkItem(block: { [weak self] in
+            guard let strongSelf = self, strongSelf.shouldStopAnimating == false else { return }
+            strongSelf.beginAnimation()
+        })
+        startAnimatingWorkItem = item
+        
+        // Note: We only animate after a short delay so we don't needlessly show a blip on faster connections
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5, execute: item)
+    }
+    
+    /*
+     Stops the loader animation.
+     */
+    open func stopAnimating() {
+        shouldStopAnimating = true
+        startAnimatingWorkItem?.cancel()
+        progressLayer.removeAllAnimations()
+    }
+    
+    //MARK: - Private methods and variables -
+    
+    private var shouldStopAnimating = false
+    private var startAnimatingWorkItem: DispatchWorkItem?
+    
+    private func beginAnimation() {
+        guard startAnimatingWorkItem?.isCancelled == false else { return }
+        
         let rotationAnimation = CABasicAnimation(keyPath: "transform.rotation")
         rotationAnimation.duration = 4.0
         rotationAnimation.fromValue = 0.0
@@ -90,18 +118,8 @@ open class Loader: UIView {
         animations.animations = [headAnimation, tailAnimation, endHeadAnimation, endTailAnimation]
         animations.repeatCount = .infinity
         
-        
         progressLayer.add(animations, forKey: "fillAnimations")
     }
-    
-    /*
-     Stops the loader animation.
-     */
-    open func stopAnimating() {
-        progressLayer.removeAllAnimations()
-    }
-    
-    //MARK: - Private methods -
     
     private func updatePath() {
         let startAngle: CGFloat = 0.0
