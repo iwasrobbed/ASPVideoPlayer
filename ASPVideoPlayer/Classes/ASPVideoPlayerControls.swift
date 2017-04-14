@@ -315,6 +315,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				
 				let currentTime = strongVideoPlayerView.currentTime
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
+                strongSelf.progressLoader.stopAnimating()
 			}
 			
 			videoPlayerView.bufferingVideo = { [weak self, weak videoPlayerView] in
@@ -349,9 +350,13 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				
 				strongSelf.playPauseButton.isSelected = false
 				strongSelf.progressSlider.value = 0.0
+                strongSelf.progressLoader.stopAnimating()
 			}
 			
 			videoPlayerView.error = { [weak self, weak videoPlayerView] (error) in
+                guard let strongSelf = self else { return }
+                
+                strongSelf.progressLoader.stopAnimating()
 				print(error)
 			}
 			
