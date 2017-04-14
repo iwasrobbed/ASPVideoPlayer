@@ -190,21 +190,36 @@ A simple UIView subclass that can play a video and allows animations to be appli
      */
     open var videoURLs: [URL]? = nil {
         didSet {
-            guard let urls = videoURLs else {
+            guard let urls = videoURLs, let firstURL = urls.first else {
                 generateError(message: "Video URLs are invalid (can't be nil).")
                 return
             }
             
+            videoItems.removeAll()
             removeObservers()
             
-            videoItems = urls.map({ AVPlayerItem(url: $0) })
-            let firstItem = videoItems.first
-            videoPlayerLayer.player = AVQueuePlayer(playerItem: firstItem)
-            videoPlayerLayer.player?.rate = 0.0
-            videoPlayerLayer.videoGravity = videoGravity
+            // Asynchronously load the first item in the array and get it ready for playing
+            loadAsset(for: firstURL) { [weak self] playerItem in
+                guard let strongSelf = self, let firstItem = playerItem else { return }
+                
+                strongSelf.videoItems.append(firstItem)
+                strongSelf.videoPlayerLayer.player = AVQueuePlayer(playerItem: firstItem)
+                strongSelf.videoPlayerLayer.player?.rate = 0.0
+                strongSelf.videoPlayerLayer.videoGravity = strongSelf.videoGravity
+                
+                strongSelf.addKVObservers(to: firstItem)
+                strongSelf.notifyOfNewVideo()
+            }
             
-            addKVObservers(to: firstItem)
-            notifyOfNewVideo()
+            // And then asynchronously load all others after
+            let otherURLs = urls.dropFirst()
+            otherURLs.forEach { url in
+                loadAsset(for: url, completion: { [weak self] playerItem in
+                    guard let strongSelf = self, let item = playerItem else { return }
+                    
+                    strongSelf.videoItems.append(item)
+                })
+            }
         }
     }
 	
@@ -285,6 +300,10 @@ A simple UIView subclass that can play a video and allows animations to be appli
     private let playbackBufferEmptyKey = "playbackBufferEmpty"
     private let playbackLikelyToKeepUpKey = "playbackLikelyToKeepUp"
     private var kvoContext = "AVPlayerItemContext"
+    
+    private let assetTracksKey = "tracks"
+    private let assetPlayableKey = "playable"
+    private let assetDurationKey = "duration"
 	
 	//MARK: - Superclass methods -
 	
@@ -454,6 +473,38 @@ A simple UIView subclass that can play a video and allows animations to be appli
     }
 	
 	//MARK: - Private methods -
+    
+    fileprivate func loadAsset(for url: URL, completion: @escaping ((_ item: AVPlayerItem?) -> Void)) {
+        let asset = AVAsset(url: url)
+        let keys = [assetTracksKey, assetPlayableKey, assetDurationKey]
+
+        asset.loadValuesAsynchronously(forKeys: keys, completionHandler: { [weak self] in
+            DispatchQueue.main.sync(execute: {
+                guard let strongSelf = self else {
+                    completion(nil)
+                    return
+                }
+                
+                keys.forEach {
+                    var error: NSError?
+                    let status = asset.statusOfValue(forKey: $0, error:&error)
+                    if status == .failed {
+                        strongSelf.generateError(message: "Asset failed to load from url. Error: \(String(describing: error))")
+                        completion(nil)
+                        return
+                    }
+                }
+                
+                guard asset.isPlayable else {
+                    strongSelf.generateError(message: "Asset is not playable after loading from url.")
+                    completion(nil)
+                    return
+                }
+                
+                completion(AVPlayerItem(asset: asset))
+            })
+        })
+    }
     
     fileprivate func generateError(message: String) {
         status = .error
