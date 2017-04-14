@@ -15,16 +15,16 @@ A video player implementation with basic functionality.
 	
 	//MARK: - Read-Only Variables and Constants -
 	
-	open fileprivate(set) var videoPlayerView: ASPVideoPlayerView!
+	open fileprivate(set) var videoPlayerView: ASPVideoPlayerView?
 	
 	//MARK: - Public Variables -
 	
 	/**
 	Sets the controls to use for the player. By default the controls are ASPVideoPlayerControls.
 	*/
-	open var videoPlayerControls: ASPBasicControls! {
+	open var videoPlayerControls: ASPBasicControls? {
 		didSet {
-			videoPlayerControls.videoPlayer = videoPlayerView
+			videoPlayerControls?.videoPlayer = videoPlayerView
 			updateControls()
 		}
 	}
@@ -37,8 +37,9 @@ A video player implementation with basic functionality.
     /**
      A URL that the player will load. Can be a local or remote URL.
      */
-    open var videoURL: URL! {
+    open var videoURL: URL? {
         didSet {
+            guard let videoURL = videoURL else { return }
             videoURLs = [videoURL]
         }
     }
@@ -48,16 +49,16 @@ A video player implementation with basic functionality.
 	*/
 	open var videoURLs: [URL] = [] {
 		didSet {
-			videoPlayerView.videoURLs = videoURLs
+			videoPlayerView?.videoURLs = videoURLs
 		}
 	}
 	
 	/**
 	Sets the color of the controls.
 	*/
-	override open var tintColor: UIColor! {
+	override open var tintColor: UIColor? {
 		didSet {
-			videoPlayerControls.tintColor = tintColor
+			videoPlayerControls?.tintColor = tintColor
 		}
 	}
 	
@@ -78,13 +79,15 @@ A video player implementation with basic functionality.
 	//MARK: - Private methods -
 	
 	@objc internal func toggleControls() {
-		if videoPlayerControls.alpha > 0 && videoPlayerView.status == .playing {
+        guard let controls = videoPlayerControls else { return }
+        
+		if controls.alpha > 0 && videoPlayerView?.status == .playing {
 			hideControls()
 		} else {
 			NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(ASPVideoPlayer.hideControls), object: nil)
 			showControls()
 			
-			if videoPlayerView.status == .playing {
+			if videoPlayerView?.status == .playing {
 				perform(#selector(ASPVideoPlayer.hideControls), with: nil, afterDelay: 3.0)
 			}
 		}
@@ -92,56 +95,56 @@ A video player implementation with basic functionality.
 	
 	internal func showControls() {
         UIView.animate(withDuration: fadeDuration, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: {
-            self.videoPlayerControls.alpha = 1.0
+            self.videoPlayerControls?.alpha = 1.0
         }, completion: nil)
 	}
 	
 	@objc internal func hideControls() {
         UIView.animate(withDuration: fadeDuration, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: { 
-            self.videoPlayerControls.alpha = 0.0
+            self.videoPlayerControls?.alpha = 0.0
         }, completion: nil)
 	}
 	
 	private func updateControls() {
-		videoPlayerControls.tintColor = tintColor
+		videoPlayerControls?.tintColor = tintColor
 		
-        videoPlayerControls.newVideo = { [weak self] in
+        videoPlayerControls?.newVideo = { [weak self] in
             guard let strongSelf = self else { return }
             
-			if let videoURL = strongSelf.videoPlayerView.currentVideoURL {
+			if let videoURL = strongSelf.videoPlayerView?.currentVideoURL {
 				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL) {
-					strongSelf.videoPlayerControls.nextButtonHidden = currentURLIndex == strongSelf.videoURLs.count - 1
-					strongSelf.videoPlayerControls.previousButtonHidden = currentURLIndex == 0
+					strongSelf.videoPlayerControls?.nextButtonHidden = currentURLIndex == strongSelf.videoURLs.count - 1
+					strongSelf.videoPlayerControls?.previousButtonHidden = currentURLIndex == 0
 				}
 			}
 		}
         
-        videoPlayerControls.startedVideo = { [weak self] in
+        videoPlayerControls?.startedVideo = { [weak self] in
             guard let strongSelf = self else { return }
             
             strongSelf.hideControls()
         }
 		
-        videoPlayerControls.didPressNextButton = { [weak self] in
+        videoPlayerControls?.didPressNextButton = { [weak self] in
             guard let strongSelf = self else { return }
             
-            strongSelf.videoPlayerView.playNextVideo()
+            strongSelf.videoPlayerView?.playNextVideo()
 		}
 		
-        videoPlayerControls.didPressPreviousButton = { [weak self] in
+        videoPlayerControls?.didPressPreviousButton = { [weak self] in
             guard let strongSelf = self else { return }
             
-            strongSelf.videoPlayerView.playPreviousVideo()
+            strongSelf.videoPlayerView?.playPreviousVideo()
 		}
 		
-		videoPlayerControls.interacting = { [weak self] (isInteracting) in
+		videoPlayerControls?.interacting = { [weak self] (isInteracting) in
             guard let strongSelf = self else { return }
             
 			NSObject.cancelPreviousPerformRequests(withTarget: strongSelf, selector: #selector(ASPVideoPlayer.hideControls), object: nil)
 			if isInteracting == true {
 				strongSelf.showControls()
 			} else {
-				if strongSelf.videoPlayerView.status == .playing {
+				if strongSelf.videoPlayerView?.status == .playing {
 					strongSelf.perform(#selector(ASPVideoPlayer.hideControls), with: nil, afterDelay: 3.0)
 				}
 			}
@@ -153,25 +156,28 @@ A video player implementation with basic functionality.
 		tapGestureRecognizer.delegate = self
 		addGestureRecognizer(tapGestureRecognizer)
 		
-		videoPlayerView = ASPVideoPlayerView()
-		videoPlayerControls = ASPVideoPlayerControls(videoPlayer: videoPlayerView)
+        let playerView = ASPVideoPlayerView()
+		videoPlayerView = playerView
+        let controlsView = ASPVideoPlayerControls(videoPlayer: playerView)
+		videoPlayerControls = controlsView
 		
-		videoPlayerView.translatesAutoresizingMaskIntoConstraints = false
-		videoPlayerControls.translatesAutoresizingMaskIntoConstraints = false
+		playerView.translatesAutoresizingMaskIntoConstraints = false
+		controlsView.translatesAutoresizingMaskIntoConstraints = false
 		
-		videoPlayerControls.backgroundColor = UIColor.black.withAlphaComponent(0.15)
+		controlsView.backgroundColor = UIColor.black.withAlphaComponent(0.15)
 		
 		updateControls()
 		
-		addSubview(videoPlayerView)
-		addSubview(videoPlayerControls)
+		addSubview(playerView)
+		addSubview(controlsView)
 		
 		setupLayout()
 	}
 	
 	private func setupLayout() {
-		let viewsDictionary: [String: Any] = ["videoPlayerView":videoPlayerView,
-		                                      "videoPlayerControls":videoPlayerControls]
+        guard let videoPlayerView = videoPlayerView, let videoPlayerControls = videoPlayerControls else { return }
+		let viewsDictionary: [String: Any] = ["videoPlayerView": videoPlayerView,
+		                                      "videoPlayerControls": videoPlayerControls]
 		
 		var constraintsArray = [NSLayoutConstraint]()
 		
@@ -185,11 +191,15 @@ A video player implementation with basic functionality.
 }
 
 extension ASPVideoPlayer: UIGestureRecognizerDelegate {
+    
 	public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        guard let videoPlayerControls = videoPlayerControls else { return true }
+        
 		if let view = touch.view, view.isDescendant(of: self) == true, view != videoPlayerView, view != videoPlayerControls || touch.location(in: videoPlayerControls).y > videoPlayerControls.bounds.size.height - 50 {
 			return false
 		} else {
 			return true
 		}
 	}
+    
 }

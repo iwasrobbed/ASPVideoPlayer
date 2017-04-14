@@ -175,7 +175,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	/**
 	Sets the color of the controls.
 	*/
-	open override var tintColor: UIColor! {
+	open override var tintColor: UIColor? {
 		didSet {
 			playPauseButton.tintColor = tintColor
 			nextButton.tintColor = tintColor

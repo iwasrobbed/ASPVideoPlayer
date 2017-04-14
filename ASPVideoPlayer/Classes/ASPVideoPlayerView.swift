@@ -288,11 +288,11 @@ A simple UIView subclass that can play a video and allows animations to be appli
         return videoItems.index(of: currentItem)
     }
 	
-	private let videoPlayerLayer: AVPlayerLayer = AVPlayerLayer()
+	private let videoPlayerLayer = AVPlayerLayer()
 	
-	private var animationForwarder: AnimationForwarder!
+	private var animationForwarder: AnimationForwarder?
 	
-	private var videoGravity: String! = AVLayerVideoGravityResizeAspectFill
+	private var videoGravity = AVLayerVideoGravityResizeAspectFill
 	
 	private var timeObserver: AnyObject?
     
@@ -324,7 +324,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
 	open override func layoutSubviews() {
 		super.layoutSubviews()
 		
-		if layer.sublayers == nil || !layer.sublayers!.contains(videoPlayerLayer) {
+		if layer.sublayers == nil || layer.sublayers?.contains(videoPlayerLayer) == false {
 			layer.addSublayer(videoPlayerLayer)
 			animationForwarder = AnimationForwarder(view: self)
 			videoPlayerLayer.delegate = animationForwarder
@@ -456,6 +456,8 @@ A simple UIView subclass that can play a video and allows animations to be appli
     }
     
     fileprivate func handleStatusChange(for item: AVPlayerItem) {
+        guard let currentItem = videoPlayerLayer.player?.currentItem, currentItem == item else { return }
+        
         if item.status == .readyToPlay {
             if status == .new {
                 status = .readyToPlay

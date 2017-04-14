@@ -35,7 +35,7 @@ let videoPlayer = ASPVideoPlayer()
 - You can also instantiate it from Interface Builder and create an IBOutlet:
 
 ```swift
-@IBOutlet weak var videoPlayer: ASPVideoPlayer!
+@IBOutlet weak var videoPlayer: ASPVideoPlayer?
 ```
 
 - Once you have the reference, you can set the video URLs, the gravity and whether the videos should loop:
@@ -71,7 +71,7 @@ let videoPlayer = ASPVideoPlayerView()
 - You can also instantiate it from Interface Builder and create an IBOutlet:
 
 ```swift
-@IBOutlet weak var videoPlayer: ASPVideoPlayerView!
+@IBOutlet weak var videoPlayer: ASPVideoPlayerView?
 ```
 
 - Once you have the reference, you can set a video url and use the closures to handle different events:

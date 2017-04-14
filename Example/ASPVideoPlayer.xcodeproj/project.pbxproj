@@ -22,6 +22,7 @@
 		75C633221E054198000DBD42 /* ASPVideoPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C633211E054198000DBD42 /* ASPVideoPlayerTests.swift */; };
 		75C6332A1E056478000DBD42 /* ASPVideoPlayer_ExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C633291E056478000DBD42 /* ASPVideoPlayer_ExampleUITests.swift */; };
 		82AABB55DE4BABA586F5C65B /* Pods_ASPVideoPlayer_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 657113FC20D81D253680D24D /* Pods_ASPVideoPlayer_Example.framework */; };
+		D4333F6C1EA10284000FC9B7 /* ASPTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4333F6A1EA10246000FC9B7 /* ASPTestCase.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +70,7 @@
 		75C633291E056478000DBD42 /* ASPVideoPlayer_ExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASPVideoPlayer_ExampleUITests.swift; sourceTree = "<group>"; };
 		75C6332B1E056478000DBD42 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8179CAB6F1755BD934B98047 /* Pods-ASPVideoPlayer_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ASPVideoPlayer_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-ASPVideoPlayer_Example/Pods-ASPVideoPlayer_Example.release.xcconfig"; sourceTree = "<group>"; };
+		D4333F6A1EA10246000FC9B7 /* ASPTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ASPTestCase.swift; sourceTree = "<group>"; };
 		D4D561E4D863E435F2EE8D02 /* Pods_ASPVideoPlayer_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ASPVideoPlayer_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E46EEA47B4689CB9C4BB8112 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -160,6 +162,7 @@
 		607FACE81AFB9204008FA782 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				D4333F6A1EA10246000FC9B7 /* ASPTestCase.swift */,
 				75C6331C1E040D91000DBD42 /* ViewControllerTests.swift */,
 				75C633211E054198000DBD42 /* ASPVideoPlayerTests.swift */,
 				75093D881D14C1CA0054E08D /* ASPVideoPlayerControlsTests.swift */,
@@ -461,6 +464,7 @@
 				75093D8A1D14C1CA0054E08D /* ASPVideoPlayerControlsTests.swift in Sources */,
 				75093D8B1D14C1CA0054E08D /* ASPVideoPlayerViewTests.swift in Sources */,
 				75C633221E054198000DBD42 /* ASPVideoPlayerTests.swift in Sources */,
+				D4333F6C1EA10284000FC9B7 /* ASPTestCase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,26 +21,10 @@ class ViewControllerTests: XCTestCase {
     
 	func testViewControllerViewCreated_ShouldLoadViewController() {
 		let storyboard = UIStoryboard(name: "Main", bundle: nil)
-		let sut = storyboard.instantiateViewController(withIdentifier: "ASPPlayerViewViewController") as! ViewController
-		let view = sut.view
-		
-		sut.videoPlayer.newVideo?()
-		
-		sut.videoPlayer.readyToPlayVideo?()
-		
-		sut.videoPlayer.startedVideo?()
-		
-		sut.videoPlayer.finishedVideo?()
-		
-		sut.videoPlayer.playingVideo?(0.0)
-		
-		sut.videoPlayer.pausedVideo?()
-		
-		sut.videoPlayer.stoppedVideo?()
-		
-		sut.videoPlayer.error?(NSError(domain: "test", code: 999, userInfo: nil))
+		let sut = storyboard.instantiateViewController(withIdentifier: "ASPPlayerViewViewController") as? ViewController
+		let view = sut?.view
 
 		XCTAssertNotNil(view, "View is not nil.")
-		XCTAssertNotNil(sut.videoPlayer, "Video player is not nil.")
+		XCTAssertNotNil(sut?.videoPlayer, "Video player is not nil.")
 	}
 }

@@ -109,10 +109,10 @@ open class Scrubber: UIControl {
 	/*
 	Sets the color of the thumb and track.
 	*/
-	open override var tintColor: UIColor! {
+	open override var tintColor: UIColor? {
 		didSet {
-			thumbColor = tintColor.cgColor
-			trackFillColor = tintColor.cgColor
+			thumbColor = tintColor?.cgColor ?? UIColor.white.cgColor
+			trackFillColor = tintColor?.cgColor ?? UIColor.white.cgColor
 		}
 	}
 	

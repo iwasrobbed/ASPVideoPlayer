@@ -9,14 +9,12 @@
 import XCTest
 @testable import ASPVideoPlayer
 
-class ASPVideoPlayerControlsTests: XCTestCase {
+class ASPVideoPlayerControlsTests: ASPTestCase {
 	
-	var videoURL: URL!
+	let videoURL = Bundle.main.url(forResource: "video", withExtension: "mp4")!
 	
 	override func setUp() {
 		super.setUp()
-		
-		videoURL = Bundle.main.url(forResource: "video", withExtension: "mp4")
 	}
 	
 	override func tearDown() {
@@ -24,7 +22,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		super.tearDown()
 	}
 	
-	func testInitPlayerControler_ShouldSetWeakReferenceToViedeoPlayer() {
+	func testInitPlayerControler_ShouldSetWeakReferenceToVideoPlayer() {
 		let videoPlayer = ASPVideoPlayerView()
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
 		
@@ -50,7 +48,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 	}
 	
 	func testSetInteracting_ShouldCallInteractingClosure() {
-		let expectation = self.expectation(description: "Timeout expectation")
+        let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
@@ -61,12 +59,8 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		}
 		
 		sut.isInteracting = true
-		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+        
+        asp_waitForExpectations()
 	}
 	
 	func testApplicationDidEnterBackgroundReceived_ShouldPauseVideo() {
@@ -77,7 +71,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 
 		NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
 		
-		XCTAssertEqual(videoPlayer.status, .paused, "Video is not paused.")
+		XCTAssertEqual(sut.videoPlayer?.status, .paused, "Video is not paused.")
 	}
 	
 	func testVideoStoppedAndPlayButtonPressed_ShouldPlayVideo() {
@@ -86,7 +80,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.playButtonPressed()
 		
-		XCTAssertEqual(videoPlayer.status, .playing, "Video is not playing.")
+		XCTAssertEqual(sut.videoPlayer?.status, .playing, "Video is not playing.")
 	}
 	
 	func testVideoPlayingAndPlayButtonPressed_ShouldPauseVideo() {
@@ -97,11 +91,11 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.playButtonPressed()
 		
-		XCTAssertEqual(videoPlayer.status, .paused, "Video is not paused.")
+		XCTAssertEqual(sut.videoPlayer?.status, .paused, "Video is not paused.")
 	}
 	
 	func testNextButtonPressed_DidPressNextButton() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
@@ -112,15 +106,11 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.nextButtonPressed()
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 	
 	func testPreviousButtonPressed_DidPressPreviousButton() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
@@ -131,15 +121,11 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.previousButtonPressed()
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 	
 	func testProgressSliderBeginTouch_ShouldSetInteraction() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
@@ -151,11 +137,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.progressSliderBeginTouch()
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 	
 	func testProgressSliderEndTouch_ShouldSetInteraction() {
@@ -167,7 +149,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		
 		sut.progressSliderChanged(slider: slider)
 		
-		XCTAssertEqual(sut.videoPlayer!.progress, Double(slider.value), "Values are not equal.")
+		XCTAssertEqual(sut.videoPlayer?.progress, Double(slider.value), "Values are not equal.")
 	}
 	
 	func testPlayCalled_ShoudStartVideoPlayback() {
@@ -201,65 +183,65 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 	}
  
 	func testJumpForwardCalled_ShouldJumpVideoPlaybackForward() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		videoPlayer.videoURL = videoURL
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
 		
-		videoPlayer.readyToPlayVideo = {
-			videoPlayer.seek(0.5)
-			let initialProgress = videoPlayer.progress
+		videoPlayer.readyToPlayVideo = { [weak videoPlayer] in
+			videoPlayer?.seek(0.5)
+			let initialProgress = videoPlayer?.progress
 			
 			sut.jumpForward()
 			
-			XCTAssertGreaterThan(sut.videoPlayer!.progress, initialProgress, "Video jumped forwards.")
+			XCTAssertGreaterThan(sut.videoPlayer?.progress ?? 0, initialProgress!, "Video jumped forwards.")
 			expectation.fulfill()
 		}
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 	
 	func testJumpBackwardCalled_ShouldJumpVideoPlaybackBackward() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		videoPlayer.videoURL = videoURL
 		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
 		
-		videoPlayer.readyToPlayVideo = {
-			videoPlayer.seek(0.5)
-			let initialProgress = videoPlayer.progress
+		videoPlayer.readyToPlayVideo = { [weak videoPlayer] in
+			videoPlayer?.seek(0.5)
+			let initialProgress = videoPlayer?.progress
 			
 			sut.jumpBackward()
 			
-			XCTAssertLessThan(sut.videoPlayer!.progress, initialProgress, "Video jumped backwards.")
+			XCTAssertLessThan(sut.videoPlayer?.progress ?? 1, initialProgress!, "Video jumped backwards.")
 			expectation.fulfill()
 		}
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 	
 	func testVolumeSet_ShouldChangeVolumeToNewValue () {
-		let videoPlayer = ASPVideoPlayerView()
-		videoPlayer.videoURL = videoURL
-		let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-		
-		sut.volume(0.5)
-		
-		XCTAssertEqual(sut.videoPlayer!.volume, 0.5, "Video volume set.")
+        let expectation = self.asp_expectation(description: #function)
+        
+        let videoPlayer = ASPVideoPlayerView()
+        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
+        
+        videoPlayer.readyToPlayVideo = {
+            sut.volume(0.5)
+            
+            XCTAssertEqual(sut.videoPlayer?.volume, 0.5, "Video volume set.")
+            expectation.fulfill()
+        }
+        
+        videoPlayer.videoURL = self.videoURL
+        
+        asp_waitForExpectations()
 	}
 	
 	func testSeekToSpecificLocation_ShouldSeekVideoToPercentage() {
-		let expectation = self.expectation(description: "Timeout expectation")
+		let expectation = self.asp_expectation(description: #function)
 		
 		let videoPlayer = ASPVideoPlayerView()
 		videoPlayer.videoURL = videoURL
@@ -270,7 +252,7 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 		let value = 1.5
 		
 		videoPlayer.seekEnded = {
-			let progress = sut.videoPlayer!.progress
+			let progress = sut.videoPlayer?.progress
 			
 			XCTAssertEqual(progress, 0.5, "Video set to specified percentage.")
 			expectation.fulfill()
@@ -280,10 +262,6 @@ class ASPVideoPlayerControlsTests: XCTestCase {
 			sut.seek(min: minimumValue, max: maximumValue, value: value)
 		}
 		
-		waitForExpectations(timeout: 5.0) { (error) in
-			if let error = error {
-				print(error)
-			}
-		}
+		asp_waitForExpectations()
 	}
 }

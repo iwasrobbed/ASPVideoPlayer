@@ -9,14 +9,12 @@
 import XCTest
 @testable import ASPVideoPlayer
 
-class ASPVideoPlayerTests: XCTestCase {
+class ASPVideoPlayerTests: ASPTestCase {
         
-	var videoURL: URL!
+	let videoURL = Bundle.main.url(forResource: "video", withExtension: "mp4")!
 	
 	override func setUp() {
 		super.setUp()
-		
-		videoURL = Bundle.main.url(forResource: "video", withExtension: "mp4")
 	}
 	
 	override func tearDown() {
@@ -26,17 +24,17 @@ class ASPVideoPlayerTests: XCTestCase {
 	func testSetGravity_ShouldSetGravity() {
 		let sut = ASPVideoPlayer()
 		
-		sut.videoPlayerView.gravity = .resize
+		sut.videoPlayerView?.gravity = .resize
 		
-		XCTAssertEqual(sut.videoPlayerView.gravity, .resize, "Player gravity not set correctly.")
+		XCTAssertEqual(sut.videoPlayerView?.gravity, .resize, "Player gravity not set correctly.")
 	}
 	
 	func testSetShouldLoop_ShouldSetShouldLoop() {
 		let sut = ASPVideoPlayer()
 		
-		sut.videoPlayerView.shouldLoop = true
+		sut.videoPlayerView?.shouldLoop = true
 		
-		XCTAssertEqual(sut.videoPlayerView.shouldLoop, true, "Player shouldLoop not set correctly.")
+		XCTAssertEqual(sut.videoPlayerView?.shouldLoop, true, "Player shouldLoop not set correctly.")
 	}
 	
     func testSetVideoURL_ShouldSetVideoURL() {
@@ -63,25 +61,25 @@ class ASPVideoPlayerTests: XCTestCase {
 		sut.tintColor = UIColor.blue
 		
 		XCTAssertEqual(sut.tintColor, UIColor.blue, "Player tint color not set correctly.")
-		XCTAssertEqual(sut.tintColor, sut.videoPlayerControls.tintColor, "Player tint color not set correctly.")
+		XCTAssertEqual(sut.tintColor, sut.videoPlayerControls?.tintColor, "Player tint color not set correctly.")
 	}
 	
 	func testControlsVisibleAndPlayerStarting_ShouldHideControls() {
 		let sut = ASPVideoPlayer()
 		sut.videoURL = videoURL
-		sut.videoPlayerControls.play()
+		sut.videoPlayerControls?.play()
 
-		XCTAssertEqual(sut.videoPlayerControls.alpha, 0.0, "Player controls are visible.")
+		XCTAssertEqual(sut.videoPlayerControls?.alpha, 0.0, "Player controls are visible.")
 	}
 	
 	func testControlsHiddenAndPlayerRunningToggleControls_ShouldShowControls() {
 		let sut = ASPVideoPlayer()
 		sut.videoURL = videoURL
-		sut.videoPlayerControls.play()
+		sut.videoPlayerControls?.play()
 		sut.hideControls()
 		
 		sut.toggleControls()
 
-		XCTAssertEqual(sut.videoPlayerControls.alpha, 1.0, "Player controls are not visible.")
+		XCTAssertEqual(sut.videoPlayerControls?.alpha, 1.0, "Player controls are not visible.")
 	}
 }

@@ -27,9 +27,9 @@ open class PlayPauseButton: UIButton {
 		}
 	}
 	
-	open override var tintColor: UIColor! {
+	open override var tintColor: UIColor? {
 		didSet {
-			playPauseLayer.color = tintColor
+			playPauseLayer.color = tintColor ?? .white
 		}
 	}
 	
@@ -61,7 +61,7 @@ open class PlayPauseButton: UIButton {
 	open override func layoutSubviews() {
 		super.layoutSubviews()
 		playPauseLayer.frame = bounds.insetBy(dx: (bounds.width / 4.0), dy: (bounds.height / 4.0))
-		playPauseLayer.color = tintColor
+		playPauseLayer.color = tintColor ?? .white
 	}
 	
 	@objc fileprivate func changeState() {
@@ -70,7 +70,7 @@ open class PlayPauseButton: UIButton {
 	
 	private func commonInit() {
 		playPauseLayer.frame = bounds.insetBy(dx: (bounds.width / 4.0), dy: (bounds.height / 4.0))
-		playPauseLayer.color = tintColor
+		playPauseLayer.color = tintColor ?? .white
 		layer.addSublayer(playPauseLayer)
 		
 		addTarget(self, action: #selector(changeState), for: .touchUpInside)
