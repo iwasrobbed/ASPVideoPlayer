@@ -154,12 +154,7 @@ open class Scrubber: UIControl {
     }
     
     override open func continueTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
-        let location = touch.location(in: self)
-        
-        let clampedX = clamp(location.x, lower: bounds.origin.x + thumbWidth / 3.5, upper: bounds.size.width - thumbWidth / 3.5)
-        let deltaLocation = CGPoint(x: clampedX, y: location.y)
-        let deltaValue = rangeMap(deltaLocation.x, min: bounds.origin.x + thumbWidth / 3.5, max: bounds.size.width - thumbWidth / 3.5, newMin: minimumValue, newMax: maximumValue)
-        
+        let (deltaLocation, deltaValue) = deltaLocationAndValue(for: touch.location(in: self))
         previousLocation = deltaLocation
         
         if thumbLayer.highlighted {
@@ -204,7 +199,23 @@ open class Scrubber: UIControl {
         thumbLayer.shadowRadius = 2.0
         layer.addSublayer(thumbLayer)
         
+        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapScrubber(tapGesture:))))
+        
         updateFrames()
+    }
+    
+    @objc private func didTapScrubber(tapGesture: UITapGestureRecognizer) {
+        let (deltaLocation, deltaValue) = deltaLocationAndValue(for: tapGesture.location(in: self))
+        previousLocation = deltaLocation
+        value = deltaValue
+        sendActions(for: .valueChanged)
+    }
+    
+    private func deltaLocationAndValue(for pointInView: CGPoint) -> (CGPoint, CGFloat) {
+        let clampedX = clamp(pointInView.x, lower: bounds.origin.x + thumbWidth / 3.5, upper: bounds.size.width - thumbWidth / 3.5)
+        let deltaLocation = CGPoint(x: clampedX, y: pointInView.y)
+        let deltaValue = rangeMap(deltaLocation.x, min: bounds.origin.x + thumbWidth / 3.5, max: bounds.size.width - thumbWidth / 3.5, newMin: minimumValue, newMax: maximumValue)
+        return (deltaLocation, deltaValue)
     }
     
     private func updateFrames() {

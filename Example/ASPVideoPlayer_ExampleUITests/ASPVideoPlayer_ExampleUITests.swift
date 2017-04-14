@@ -38,7 +38,7 @@ class ASPVideoPlayer_ExampleUITests: XCTestCase {
         XCTAssertEqual(button.isSelected, true, "Button is not selected.")
     }
     
-    func testAdjustScrubber_ShouldSeekVideo() {
+    func testDragScrubber_ShouldSeekVideo() {
         let app = XCUIApplication()
         let element = app.children(matching: .window).element(boundBy: 0)
         let labelValue = app.staticTexts.element(boundBy: 0)
@@ -51,6 +51,17 @@ class ASPVideoPlayer_ExampleUITests: XCTestCase {
         let destinationCoordinate: XCUICoordinate = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1.0))
         
         startCoordinate.press(forDuration: 0.0, thenDragTo: destinationCoordinate)
+        
+        XCTAssertNotEqual(labelValue.label, "00:00:00", "Values are equal.")
+        XCTAssertNotEqual(labelValue.label, "00:00", "Values are equal.")
+    }
+    
+    func testTapScrubber_ShouldSeekVideo() {
+        let app = XCUIApplication()
+        let labelValue = app.staticTexts.element(boundBy: 0)
+        
+        // Tap scrubber
+        app.children(matching: .window).element(boundBy: 0).children(matching: .other).element.children(matching: .other).element.children(matching: .other).element(boundBy: 1).children(matching: .other).element(boundBy: 1).tap()
         
         XCTAssertNotEqual(labelValue.label, "00:00:00", "Values are equal.")
         XCTAssertNotEqual(labelValue.label, "00:00", "Values are equal.")
