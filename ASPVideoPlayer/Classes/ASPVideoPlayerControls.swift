@@ -280,7 +280,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	private func setupVideoPlayerView() {
 		if let videoPlayerView = videoPlayer {
-			videoPlayerView.newVideo = { [weak self] in
+			videoPlayerView.newVideo = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.newVideo?()
@@ -294,74 +294,74 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: 0)
 			}
 			
-			videoPlayerView.readyToPlayVideo = { [weak self] in
-				guard let strongSelf = self else { return }
+			videoPlayerView.readyToPlayVideo = { [weak self, weak videoPlayerView] in
+				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
 				
 				strongSelf.progressSlider.isUserInteractionEnabled = true
 				
-				let currentTime = videoPlayerView.currentTime
-				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(videoPlayerView.videoLength))
+				let currentTime = strongVideoPlayerView.currentTime
+				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 				
 				strongSelf.progressLoader.stopAnimating()
 			}
 			
-			videoPlayerView.playingVideo = { [weak self] (progress) in
-				guard let strongSelf = self else { return }
+			videoPlayerView.playingVideo = { [weak self, weak videoPlayerView] (progress) in
+				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
 				
 				if strongSelf.isInteracting == false {
 					strongSelf.progressSlider.value = CGFloat(progress)
 				}
 				
-				let currentTime = videoPlayerView.currentTime
+				let currentTime = strongVideoPlayerView.currentTime
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 			}
 			
-			videoPlayerView.bufferingVideo = { [weak self] in
+			videoPlayerView.bufferingVideo = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.progressLoader.startAnimating()
 			}
 			
-			videoPlayerView.bufferingVideoFinished = { [weak self] in
+			videoPlayerView.bufferingVideoFinished = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.progressLoader.stopAnimating()
 			}
 			
-			videoPlayerView.startedVideo = { [weak self] in
-				guard let strongSelf = self else { return }
+			videoPlayerView.startedVideo = { [weak self, weak videoPlayerView] in
+				guard let strongSelf = self, let strongVideoPlayerView = videoPlayerView else { return }
 				
 				strongSelf.startedVideo?()
 				
 				strongSelf.progressSlider.isUserInteractionEnabled = true
 				strongSelf.playPauseButton.isSelected = true
 				
-				let currentTime = videoPlayerView.currentTime
-				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(videoPlayerView.videoLength))
+				let currentTime = strongVideoPlayerView.currentTime
+				strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
 				strongSelf.currentTimeLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(currentTime))
 				
 				strongSelf.progressLoader.stopAnimating()
 			}
 			
-			videoPlayerView.stoppedVideo = { [weak self] in
+			videoPlayerView.stoppedVideo = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.playPauseButton.isSelected = false
 				strongSelf.progressSlider.value = 0.0
 			}
 			
-			videoPlayerView.error = { (error) in
+			videoPlayerView.error = { [weak self, weak videoPlayerView] (error) in
 				print(error)
 			}
 			
-			videoPlayerView.seekStarted = { [weak self] in
+			videoPlayerView.seekStarted = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.progressLoader.startAnimating()
 			}
 			
-			videoPlayerView.seekEnded = { [weak self] in
+			videoPlayerView.seekEnded = { [weak self, weak videoPlayerView] in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.progressLoader.stopAnimating()

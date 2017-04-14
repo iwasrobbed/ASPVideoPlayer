@@ -407,12 +407,13 @@ import AVFoundation
                 playingVideo?(progress)
             } else {
                 let time = CMTime(seconds: progress * currentItem.asset.duration.seconds, preferredTimescale: currentItem.asset.duration.timescale)
-                videoPlayerLayer.player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: { (finished) in
+                videoPlayerLayer.player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: { [weak self] (finished) in
+                    guard let strongSelf = self else { return }
                     if finished == false {
-                        self.seekStarted?()
+                        strongSelf.seekStarted?()
                     } else {
-                        self.seekEnded?()
-                        self.playingVideo?(self.progress)
+                        strongSelf.seekEnded?()
+                        strongSelf.playingVideo?(strongSelf.progress)
                     }
                 })
             }
@@ -530,12 +531,12 @@ import AVFoundation
         }
         
         timeObserver = videoPlayerLayer.player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.01, preferredTimescale: Int32(NSEC_PER_SEC)), queue: nil, using: { [weak self] (time) in
-            guard let weakSelf = self , self?.status == .playing else { return }
+            guard let strongSelf = self , strongSelf.status == .playing else { return }
             
             let currentTime = time.seconds
-            weakSelf.progress = currentTime / (weakSelf.videoLength != 0.0 ? weakSelf.videoLength : 1.0)
+            strongSelf.progress = currentTime / (strongSelf.videoLength != 0.0 ? strongSelf.videoLength : 1.0)
             
-            weakSelf.playingVideo?(weakSelf.progress)
+            strongSelf.playingVideo?(strongSelf.progress)
         }) as AnyObject?
     }
     
