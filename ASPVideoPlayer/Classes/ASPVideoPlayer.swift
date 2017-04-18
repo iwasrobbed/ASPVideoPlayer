@@ -185,7 +185,7 @@ import UIKit
         constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "H:|[videoPlayerControls]|", options: [], metrics: nil, views: viewsDictionary))
         constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:|[videoPlayerControls]|", options: [], metrics: nil, views: viewsDictionary))
         
-        addConstraints(constraintsArray)
+        NSLayoutConstraint.activate(constraintsArray)
     }
 }
 

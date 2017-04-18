@@ -528,7 +528,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[currentTimeLabel(==40)]-3-|", options: [], metrics: nil, views: viewsDictionary))
 		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[lengthLabel(==40)]-3-|", options: [], metrics: nil, views: viewsDictionary))
 		
-		addConstraints(constraintsArray)
+		NSLayoutConstraint.activate(constraintsArray)
 	}
 	
 	//MARK: - Closure notifications -
