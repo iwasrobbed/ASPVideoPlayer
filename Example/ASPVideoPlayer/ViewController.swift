@@ -42,28 +42,30 @@ class ViewController: UIViewController {
 			
 		}
 		
-		videoPlayer.finishedVideo = {
+        videoPlayer.finishedVideo = { [weak self] in
+            guard let strongSelf = self else { return }
+            
 			print("finishedVideo")
-			if videoPlayer.videoURL == firstVideoURL {
-				videoPlayer.startPlayingWhenReady = true
-				videoPlayer.videoURL = secondVideoURL
+            if strongSelf.videoPlayer.videoURL == strongSelf.firstVideoURL {
+				strongSelf.videoPlayer.startPlayingWhenReady = true
+				strongSelf.videoPlayer.videoURL = strongSelf.secondVideoURL
 			}
 			
 			UIView.animate(withDuration: 0.3, delay: 0.0, options: .curveEaseIn, animations: {
-				self.videoTopConstraint.constant = 150.0
-				self.videoBottomConstraint.constant = 150.0
-				self.videoLeadingConstraint.constant = 150.0
-				self.videoTrailingConstraint.constant = 150.0
-				self.view.layoutIfNeeded()
+				strongSelf.videoTopConstraint.constant = 150.0
+				strongSelf.videoBottomConstraint.constant = 150.0
+				strongSelf.videoLeadingConstraint.constant = 150.0
+				strongSelf.videoTrailingConstraint.constant = 150.0
+				strongSelf.view.layoutIfNeeded()
 				}, completion: { (finished) in
 					UIView.animate(withDuration: 0.3, delay: 1.0, options: .curveEaseIn, animations: {
 						
-						self.videoTopConstraint.constant = 0.0
-						self.videoBottomConstraint.constant = 0.0
-						self.videoLeadingConstraint.constant = 0.0
-						self.videoTrailingConstraint.constant = 0.0
+						strongSelf.videoTopConstraint.constant = 0.0
+						strongSelf.videoBottomConstraint.constant = 0.0
+						strongSelf.videoLeadingConstraint.constant = 0.0
+						strongSelf.videoTrailingConstraint.constant = 0.0
 						
-						self.view.layoutIfNeeded()
+						strongSelf.view.layoutIfNeeded()
 						}, completion: { (finished) in
 							
 					})

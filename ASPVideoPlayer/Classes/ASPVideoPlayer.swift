@@ -120,57 +120,67 @@ A video player implementation with basic functionality.
 	private func updateControls() {
 		videoPlayerControls.tintColor = tintColor
 		
-		videoPlayerControls.newVideo = {
-			if let videoURL = videoPlayerView.videoURL {
-				if let currentURLIndex = videoURLs.index(of: videoURL) {
-					videoPlayerControls.nextButtonHidden = currentURLIndex == videoURLs.count - 1
-					videoPlayerControls.previousButtonHidden = currentURLIndex == 0
+        videoPlayerControls.newVideo = { [weak self] in
+            guard let strongSelf = self else { return }
+            
+			if let videoURL = strongSelf.videoPlayerView.videoURL {
+				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL) {
+					strongSelf.videoPlayerControls.nextButtonHidden = currentURLIndex == strongSelf.videoURLs.count - 1
+					strongSelf.videoPlayerControls.previousButtonHidden = currentURLIndex == 0
 				}
 			}
 		}
 		
-		videoPlayerControls.finishedVideo = {
-			if let videoURL = videoPlayerView.videoURL {
-				if videoURL == videoURLs.last {
-					if videoPlayerView.shouldLoop == true {
-						videoPlayerView.videoURL = videoURLs.first
+        videoPlayerControls.finishedVideo = { [weak self] in
+            guard let strongSelf = self else { return }
+            
+			if let videoURL = strongSelf.videoPlayerView.videoURL {
+				if videoURL == strongSelf.videoURLs.last {
+					if strongSelf.videoPlayerView.shouldLoop == true {
+						strongSelf.videoPlayerView.videoURL = strongSelf.videoURLs.first
 					}
 				} else {
-					let currentURLIndex = videoURLs.index(of: videoURL)
-					let nextURL = videoURLs[currentURLIndex! + 1]
+					let currentURLIndex = strongSelf.videoURLs.index(of: videoURL)
+					let nextURL = strongSelf.videoURLs[currentURLIndex! + 1]
 					
-					videoPlayerView.videoURL = nextURL
+					strongSelf.videoPlayerView.videoURL = nextURL
 				}
 			}
 		}
 		
-		videoPlayerControls.didPressNextButton = {
-			if let videoURL = videoPlayerView.videoURL {
-				if let currentURLIndex = videoURLs.index(of: videoURL), currentURLIndex + 1 < videoURLs.count {
-					let nextURL = videoURLs[currentURLIndex + 1]
+        videoPlayerControls.didPressNextButton = { [weak self] in
+            guard let strongSelf = self else { return }
+            
+			if let videoURL = strongSelf.videoPlayerView.videoURL {
+				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL), currentURLIndex + 1 < strongSelf.videoURLs.count {
+					let nextURL = strongSelf.videoURLs[currentURLIndex + 1]
 					
-					videoPlayerView.videoURL = nextURL
+					strongSelf.videoPlayerView.videoURL = nextURL
 				}
 			}
 		}
 		
-		videoPlayerControls.didPressPreviousButton = {
-			if let videoURL = videoPlayerView.videoURL {
-				if let currentURLIndex = videoURLs.index(of: videoURL), currentURLIndex > 0 {
-					let nextURL = videoURLs[currentURLIndex - 1]
+        videoPlayerControls.didPressPreviousButton = { [weak self] in
+            guard let strongSelf = self else { return }
+            
+			if let videoURL = strongSelf.videoPlayerView.videoURL {
+				if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL), currentURLIndex > 0 {
+					let nextURL = strongSelf.videoURLs[currentURLIndex - 1]
 					
-					videoPlayerView.videoURL = nextURL
+					strongSelf.videoPlayerView.videoURL = nextURL
 				}
 			}
 		}
 		
-		videoPlayerControls.interacting = { (isInteracting) in
-			NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(ASPVideoPlayer.hideControls), object: nil)
+		videoPlayerControls.interacting = { [weak self] (isInteracting) in
+            guard let strongSelf = self else { return }
+            
+			NSObject.cancelPreviousPerformRequests(withTarget: strongSelf, selector: #selector(ASPVideoPlayer.hideControls), object: nil)
 			if isInteracting == true {
-				showControls()
+				strongSelf.showControls()
 			} else {
-				if videoPlayerView.status == .playing {
-					perform(#selector(ASPVideoPlayer.hideControls), with: nil, afterDelay: 3.0)
+				if strongSelf.videoPlayerView.status == .playing {
+					strongSelf.perform(#selector(ASPVideoPlayer.hideControls), with: nil, afterDelay: 3.0)
 				}
 			}
 		}
