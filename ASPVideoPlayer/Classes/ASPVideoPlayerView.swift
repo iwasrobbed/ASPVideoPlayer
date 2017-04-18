@@ -421,7 +421,11 @@ import AVFoundation
         return videoItems.index(of: currentItem)
     }
     
-    private let videoPlayerLayer = AVPlayerLayer()
+    private lazy var videoPlayerLayer: AVPlayerLayer = { [unowned self] in
+        let layer = AVPlayerLayer()
+        layer.videoGravity = self.videoGravity
+        return layer
+    }()
     
     private var animationForwarder: AnimationForwarder?
     
