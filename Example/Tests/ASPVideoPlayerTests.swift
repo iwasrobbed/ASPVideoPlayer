@@ -36,7 +36,15 @@ class ASPVideoPlayerTests: ASPTestCase {
         
         XCTAssertEqual(sut.videoPlayerView?.shouldLoop, true, "Player shouldLoop not set correctly.")
     }
-    
+	
+	func testSetControlsInitiallyHidden_ShouldSetControlsInitiallyHidden() {
+		let sut = ASPVideoPlayer()
+		
+		sut.controlsInitiallyHidden = true
+		
+		XCTAssertEqual(sut.controlsInitiallyHidden, true, "Player controlsInitiallyHidden not set correctly.")
+	}
+	
     func testSetVideoURL_ShouldSetVideoURL() {
         let sut = ASPVideoPlayer()
         
@@ -71,7 +79,25 @@ class ASPVideoPlayerTests: ASPTestCase {
         
         XCTAssertEqual(sut.videoPlayerControls?.alpha, 0.0, "Player controls are visible.")
     }
-    
+	
+	func testControlsInitiallyHidden_ShouldHideControlsInitially() {
+		let sut = ASPVideoPlayer()
+		
+		sut.controlsInitiallyHidden = true
+		sut.videoURL = videoURL
+		
+		XCTAssertEqual(sut.videoPlayerControls?.alpha, 0.0, "Player controls are not visible.")
+	}
+	
+	func testControlsNotInitiallyHidden_ShouldShowControlsInitially() {
+		let sut = ASPVideoPlayer()
+		
+		sut.controlsInitiallyHidden = false
+		sut.videoURL = videoURL
+		
+		XCTAssertEqual(sut.videoPlayerControls?.alpha, 1.0, "Player controls are visible.")
+	}
+	
     func testControlsHiddenAndPlayerRunningToggleControls_ShouldShowControls() {
         let sut = ASPVideoPlayer()
         sut.videoURL = videoURL

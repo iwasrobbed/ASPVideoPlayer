@@ -29,6 +29,15 @@ import UIKit
     }
     
     /**
+     Whether or not the controls should be hidden until the player is started / interacted with.
+     */
+    open var controlsInitiallyHidden = false {
+        didSet {
+            videoPlayerControls?.alpha = controlsInitiallyHidden ? 0 : 1
+        }
+    }
+    
+    /**
      The duration of the fade animation.
      */
     open var fadeDuration = 0.3
