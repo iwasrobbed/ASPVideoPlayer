@@ -243,25 +243,6 @@ class ASPVideoPlayerViewTests: ASPTestCase {
         asp_waitForExpectations()
     }
     
-    func testPlayFinishedVideo_ShouldStartVideoPlaybackFromBeginning() {
-        let expectation = self.asp_expectation(description: #function)
-        
-        let player = ASPVideoPlayerView()
-        player.readyToPlayVideo = { [weak player] in
-            player?.playingVideo = { (progress) in
-                XCTAssertEqual(player?.status, ASPVideoPlayerView.PlayerStatus.playing, "Video is playing.")
-                player?.stopVideo()
-                expectation.fulfill()
-            }
-            
-            player?.playVideo()
-        }
-        
-        player.videoURL = videoURL
-        
-        asp_waitForExpectations()
-    }
-    
     func testStopVideo_ShouldStopVideo() {
         let expectation = self.asp_expectation(description: #function)
         

@@ -433,6 +433,10 @@ import AVFoundation
     
     private var timeObserver: AnyObject?
     
+    // KVO has no way of checking if an observer has been added so we can
+    // then safely remove it, so this is an alternative way
+    private var addedKVObservers = false
+    
     private let statusKey = "status"
     private let playbackBufferEmptyKey = "playbackBufferEmpty"
     private let playbackLikelyToKeepUpKey = "playbackLikelyToKeepUp"
@@ -581,17 +585,20 @@ import AVFoundation
     }
     
     fileprivate func addKVObservers(to item: AVPlayerItem?) {
-        guard let item = item else { return }
+        guard addedKVObservers == false, let item = item else { return }
         item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
         item.addObserver(self, forKeyPath: playbackBufferEmptyKey, options: [], context: &kvoContext)
         item.addObserver(self, forKeyPath: playbackLikelyToKeepUpKey, options: [], context: &kvoContext)
+        
+        addedKVObservers = true
     }
     
     fileprivate func removeKVObservers() {
-        guard let currentItem = videoPlayerLayer.player?.currentItem else { return }
+        guard addedKVObservers, let currentItem = videoPlayerLayer.player?.currentItem else { return }
         currentItem.removeObserver(self, forKeyPath: statusKey)
         currentItem.removeObserver(self, forKeyPath: playbackBufferEmptyKey)
         currentItem.removeObserver(self, forKeyPath: playbackLikelyToKeepUpKey)
+        addedKVObservers = false
     }
     
     fileprivate func handleStatusChange(for item: AVPlayerItem) {
