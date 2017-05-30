@@ -28,14 +28,6 @@ class ASPVideoPlayerTests: ASPTestCase {
         
         XCTAssertEqual(sut.videoPlayerView?.gravity, .resize, "Player gravity not set correctly.")
     }
-    
-    func testSetShouldLoop_ShouldSetShouldLoop() {
-        let sut = ASPVideoPlayer()
-        
-        sut.videoPlayerView?.shouldLoop = true
-        
-        XCTAssertEqual(sut.videoPlayerView?.shouldLoop, true, "Player shouldLoop not set correctly.")
-    }
 	
 	func testSetControlsInitiallyHidden_ShouldSetControlsInitiallyHidden() {
 		let sut = ASPVideoPlayer()
@@ -50,17 +42,7 @@ class ASPVideoPlayerTests: ASPTestCase {
         
         sut.videoURL = videoURL
         
-        XCTAssertEqual(sut.videoURLs.first, videoURL, "Player URLs not set correctly.")
-        XCTAssertEqual(sut.videoURLs.count, 1, "Player URLs not set correctly.")
-    }
-    
-    func testSetVideoURLs_ShouldSetVideoURLs() {
-        let sut = ASPVideoPlayer()
-        
-        sut.videoURLs = [videoURL]
-        
-        XCTAssertEqual(sut.videoURLs.first, videoURL, "Player URLs not set correctly.")
-        XCTAssertEqual(sut.videoURLs.count, 1, "Player URLs not set correctly.")
+        XCTAssertEqual(sut.videoURL, videoURL, "Player URLs not set correctly.")
     }
     
     func testSetTintColor_ShouldSetTintColorForVideoControls() {

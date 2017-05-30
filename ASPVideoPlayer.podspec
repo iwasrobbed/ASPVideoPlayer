@@ -28,7 +28,7 @@ A simple UIView subclass that can play a video and allows animations to be appli
   s.source           = { :git => 'https://github.com/andreipitis/ASPVideoPlayer.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/AndyPitis'
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '10.0'
 
   s.source_files = 'ASPVideoPlayer/Classes/**/*'
   

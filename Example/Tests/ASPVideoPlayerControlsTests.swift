@@ -29,24 +29,6 @@ class ASPVideoPlayerControlsTests: ASPTestCase {
         XCTAssertEqual(sut.videoPlayer, videoPlayer, "Players are equal.")
     }
     
-    func testSetNextButtonHidden_ShouldHideNextButton() {
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.nextButtonHidden = true
-        
-        XCTAssertEqual(sut.nextButtonHidden, true, "Next button is not hidden.")
-    }
-    
-    func testSetPreviousButtonHidden_ShouldHidePreviousButton() {
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.previousButtonHidden = true
-        
-        XCTAssertEqual(sut.previousButtonHidden, true, "Next button is not hidden.")
-    }
-    
     func testSetInteracting_ShouldCallInteractingClosure() {
         let expectation = self.asp_expectation(description: #function)
         
@@ -72,56 +54,6 @@ class ASPVideoPlayerControlsTests: ASPTestCase {
         NotificationCenter.default.post(name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
         
         XCTAssertEqual(sut.videoPlayer?.status, .paused, "Video is not paused.")
-    }
-    
-    func testVideoStoppedAndPlayButtonPressed_ShouldPlayVideo() {
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.playButtonPressed()
-        
-        XCTAssertEqual(sut.videoPlayer?.status, .playing, "Video is not playing.")
-    }
-    
-    func testVideoPlayingAndPlayButtonPressed_ShouldPauseVideo() {
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.play()
-        
-        sut.playButtonPressed()
-        
-        XCTAssertEqual(sut.videoPlayer?.status, .paused, "Video is not paused.")
-    }
-    
-    func testNextButtonPressed_DidPressNextButton() {
-        let expectation = self.asp_expectation(description: #function)
-        
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.didPressNextButton = {
-            expectation.fulfill()
-        }
-        
-        sut.nextButtonPressed()
-        
-        asp_waitForExpectations()
-    }
-    
-    func testPreviousButtonPressed_DidPressPreviousButton() {
-        let expectation = self.asp_expectation(description: #function)
-        
-        let videoPlayer = ASPVideoPlayerView()
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.didPressPreviousButton = {
-            expectation.fulfill()
-        }
-        
-        sut.previousButtonPressed()
-        
-        asp_waitForExpectations()
     }
     
     func testProgressSliderBeginTouch_ShouldSetInteraction() {
@@ -170,16 +102,6 @@ class ASPVideoPlayerControlsTests: ASPTestCase {
         sut.pause()
         
         XCTAssertEqual(sut.videoPlayer?.status, ASPVideoPlayerView.PlayerStatus.paused, "Video is paused.")
-    }
-    
-    func testStopCalled_ShouldStopVideoPlayback() {
-        let videoPlayer = ASPVideoPlayerView()
-        videoPlayer.videoURL = videoURL
-        let sut = ASPVideoPlayerControls(videoPlayer: videoPlayer)
-        
-        sut.stop()
-        
-        XCTAssertEqual(sut.videoPlayer?.status, ASPVideoPlayerView.PlayerStatus.stopped, "Video is stopped.")
     }
     
     func testJumpForwardCalled_ShouldJumpVideoPlaybackForward() {

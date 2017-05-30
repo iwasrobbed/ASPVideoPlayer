@@ -11,6 +11,7 @@ import UIKit
 /**
  A video player implementation with basic functionality.
  */
+@available(iOS 10.0, *)
 @IBDesignable open class ASPVideoPlayer: UIView {
     
     //MARK: - Read-Only Variables and Constants -
@@ -48,16 +49,7 @@ import UIKit
     open var videoURL: URL? {
         didSet {
             guard let videoURL = videoURL else { return }
-            videoURLs = [videoURL]
-        }
-    }
-    
-    /**
-     An array of URLs that the player will load. Can be local or remote URLs.
-     */
-    open var videoURLs: [URL] = [] {
-        didSet {
-            videoPlayerView?.videoURLs = videoURLs
+            videoPlayerView?.videoURL = videoURL
         }
     }
     
@@ -86,7 +78,16 @@ import UIKit
     
     //MARK: - Private methods -
     
-    @objc internal func toggleControls() {
+    @objc internal func pauseOrPlayVideo() {
+        if videoPlayerView?.status == .playing {
+            videoPlayerView?.pauseVideo()
+        } else {
+            videoPlayerView?.playVideo()
+        }
+        toggleControls()
+    }
+    
+    internal func toggleControls() {
         guard let controls = videoPlayerControls else { return }
         
         if controls.alpha > 0 && videoPlayerView?.status == .playing {
@@ -116,33 +117,10 @@ import UIKit
     private func updateControls() {
         videoPlayerControls?.tintColor = tintColor
         
-        videoPlayerControls?.newVideo = { [weak self] in
-            guard let strongSelf = self else { return }
-            
-            if let videoURL = strongSelf.videoPlayerView?.currentVideoURL {
-                if let currentURLIndex = strongSelf.videoURLs.index(of: videoURL) {
-                    strongSelf.videoPlayerControls?.nextButtonHidden = currentURLIndex == strongSelf.videoURLs.count - 1
-                    strongSelf.videoPlayerControls?.previousButtonHidden = currentURLIndex == 0
-                }
-            }
-        }
-        
         videoPlayerControls?.startedVideo = { [weak self] in
             guard let strongSelf = self else { return }
             
             strongSelf.hideControls()
-        }
-        
-        videoPlayerControls?.didPressNextButton = { [weak self] in
-            guard let strongSelf = self else { return }
-            
-            strongSelf.videoPlayerView?.playNextVideo()
-        }
-        
-        videoPlayerControls?.didPressPreviousButton = { [weak self] in
-            guard let strongSelf = self else { return }
-            
-            strongSelf.videoPlayerView?.playPreviousVideo()
         }
         
         videoPlayerControls?.interacting = { [weak self] (isInteracting) in
@@ -160,7 +138,7 @@ import UIKit
     }
     
     private func commonInit() {
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ASPVideoPlayer.toggleControls))
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ASPVideoPlayer.pauseOrPlayVideo))
         tapGestureRecognizer.delegate = self
         addGestureRecognizer(tapGestureRecognizer)
         
@@ -198,6 +176,7 @@ import UIKit
     }
 }
 
+@available(iOS 10.0, *)
 extension ASPVideoPlayer: UIGestureRecognizerDelegate {
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {

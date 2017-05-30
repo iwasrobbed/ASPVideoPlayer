@@ -263,20 +263,4 @@ class ASPVideoPlayerViewTests: ASPTestCase {
         asp_waitForExpectations()
     }
     
-    func testShouldLoopSet_ShouldLoopVideoWhenFinished() {
-        let expectation = self.asp_expectation(description: #function)
-        
-        let player = ASPVideoPlayerView()
-        player.shouldLoop = true
-        player.startPlayingWhenReady = true
-        
-        player.finishedVideo = { [weak player] in
-            XCTAssertEqual(player?.status, ASPVideoPlayerView.PlayerStatus.playing, "Video is playing.")
-            expectation.fulfill()
-        }
-        
-        player.videoURL = videoURL
-        
-        asp_waitForExpectations(timeout: 20)
-    }
 }

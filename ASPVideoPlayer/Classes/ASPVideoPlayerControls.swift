@@ -11,6 +11,7 @@ import UIKit
 /**
 Protocol defining the player controls behaviour.
 */
+@available(iOS 10.0, *)
 public protocol VideoPlayerControls {
 	/**
 	Reference to the video player.
@@ -31,11 +32,6 @@ public protocol VideoPlayerControls {
 	Pauses the video playback.
 	*/
 	func pause()
-	
-	/**
-	Stops the video playback.
-	*/
-	func stop()
 	
 	/**
 	Jumps forward in the video playback.
@@ -59,6 +55,7 @@ public protocol VideoPlayerControls {
 /**
 Protocol defining the player seek behaviour.
 */
+@available(iOS 10.0, *)
 public protocol VideoPlayerSeekControls {
 	/**
 	Reference to the video player.
@@ -77,6 +74,7 @@ public protocol VideoPlayerSeekControls {
 /**
 Default implementation of the `VideoPlayerSeekControls` protocol.
 */
+@available(iOS 10.0, *)
 public extension VideoPlayerSeekControls {
 	func seek(min: Double = 0.0, max: Double = 1.0, value: Double) {
 		let value = rangeMap(value, min: min, max: max, newMin: 0.0, newMax: 1.0)
@@ -87,6 +85,7 @@ public extension VideoPlayerSeekControls {
 /**
 Default implementation of the `VideoPlayerControls` protocol.
 */
+@available(iOS 10.0, *)
 public extension VideoPlayerControls {
 	func play() {
 		videoPlayer?.playVideo()
@@ -94,10 +93,6 @@ public extension VideoPlayerControls {
 	
 	func pause() {
 		videoPlayer?.pauseVideo()
-	}
-	
-	func stop() {
-		videoPlayer?.stopVideo()
 	}
 	
 	func jumpForward(_ value: Double = 0.05) {
@@ -122,6 +117,7 @@ public extension VideoPlayerControls {
 /**
 Base class for the video controls.
 */
+@available(iOS 10.0, *)
 open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControls {
 	
 	//MARK: - Base class variables -
@@ -130,26 +126,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	public typealias VoidClosure = () -> ()
 	public typealias BoolClosure = (Bool) -> ()
-	
-	open var didPressNextButton: VoidClosure? {
-		didSet {
-			guard let closure = didPressNextButton else {
-				didPressNextButtonClosures.removeAll()
-				return
-			}
-			didPressNextButtonClosures.append(closure)
-		}
-	}
-	
-	open var didPressPreviousButton: VoidClosure? {
-		didSet {
-			guard let closure = didPressPreviousButton else {
-				didPressPreviousButtonClosures.removeAll()
-				return
-			}
-			didPressPreviousButtonClosures.append(closure)
-		}
-	}
 	
 	open var interacting: BoolClosure? {
 		didSet {
@@ -181,20 +157,16 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		}
 	}
 	
-	open var nextButtonHidden: Bool = true
-	open var previousButtonHidden: Bool = true
-	
 	open var timeFont = UIFont(name: "Courier-Bold", size: 12.0)
 	
 	//MARK: - Base class private variables -
-	
-	fileprivate var didPressNextButtonClosures = [VoidClosure]()
-	fileprivate var didPressPreviousButtonClosures = [VoidClosure]()
+
 	fileprivate var interactingClosures = [BoolClosure]()
 	fileprivate var newVideoClosures = [VoidClosure]()
 	fileprivate var startedVideoClosures = [VoidClosure]()
 }
 
+@available(iOS 10.0, *)
 @IBDesignable open class ASPVideoPlayerControls: ASPBasicControls {
 	/**
 	Reference to the video player. Can be set through the Interface Builder.
@@ -206,37 +178,10 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	}
 	
 	/**
-	Sets the visibility of the next button.
-	*/
-	open override var nextButtonHidden: Bool {
-		set {
-			nextButton.isHidden = newValue
-		}
-		get {
-			return nextButton.isHidden
-		}
-	}
-	
-	/**
-	Sets the visibility of the previous button.
-	*/
-	open override var previousButtonHidden: Bool {
-		set {
-			previousButton.isHidden = newValue
-		}
-		get {
-			return previousButton.isHidden
-		}
-	}
-	
-	/**
 	Sets the color of the controls.
 	*/
 	open override var tintColor: UIColor? {
 		didSet {
-			playPauseButton.tintColor = tintColor
-			nextButton.tintColor = tintColor
-			previousButton.tintColor = tintColor
 			progressLoader.tintColor = tintColor
 			progressSlider.tintColor = tintColor
 			
@@ -257,10 +202,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	//MARK: - Private Variables and Constants -
 	
-	private let playPauseButton = PlayPauseButton()
 	private let progressSlider = Scrubber()
-	private let nextButton = NextButton()
-	private let previousButton = PreviousButton()
 	private let progressLoader = Loader()
 	
 	private var currentTimeLabel = UILabel()
@@ -311,16 +253,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	
 	//MARK: - Private methods -
 	
-	@objc internal func nextButtonPressed() {
-		isInteracting = false
-		notifyOfDidPressNextButton()
-	}
-	
-	@objc internal func previousButtonPressed() {
-		isInteracting = false
-		notifyOfDidPressPreviousButton()
-	}
-	
 	@objc internal func progressSliderBeginTouch() {
 		isInteracting = true
 	}
@@ -331,7 +263,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	}
 	
 	@objc internal func applicationDidEnterBackground() {
-		playPauseButton.isSelected = false
 		pause()
 	}
 	
@@ -397,7 +328,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 			strongSelf.notifyOfStartedVideo()
 			
 			strongSelf.progressSlider.isUserInteractionEnabled = true
-			strongSelf.playPauseButton.isSelected = true
 			
 			let currentTime = strongVideoPlayerView.currentTime
 			strongSelf.lengthLabel.text = strongSelf.timeFormatted(totalSeconds: UInt(strongVideoPlayerView.videoLength))
@@ -408,8 +338,7 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		
 		videoPlayerView.stoppedVideo = { [weak self] in
 			guard let strongSelf = self else { return }
-			
-			strongSelf.playPauseButton.isSelected = false
+
 			strongSelf.progressSlider.value = 0.0
 			strongSelf.progressLoader.stopAnimating()
 		}
@@ -449,23 +378,12 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	private func commonInit() {
 		NotificationCenter.default.addObserver(self, selector: #selector(ASPVideoPlayerControls.applicationDidEnterBackground), name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
 		
-		playPauseButton.translatesAutoresizingMaskIntoConstraints = false
 		progressSlider.translatesAutoresizingMaskIntoConstraints = false
-		nextButton.translatesAutoresizingMaskIntoConstraints = false
-		previousButton.translatesAutoresizingMaskIntoConstraints = false
 		progressLoader.translatesAutoresizingMaskIntoConstraints = false
 		currentTimeLabel.translatesAutoresizingMaskIntoConstraints = false
 		lengthLabel.translatesAutoresizingMaskIntoConstraints = false
 		
-		previousButton.isHidden = true
-		nextButton.isHidden = true
-		
-		playPauseButton.backgroundColor = .clear
-		playPauseButton.tintColor = tintColor
-		
 		progressSlider.tintColor = tintColor
-		previousButton.tintColor = tintColor
-		nextButton.tintColor = tintColor
 		progressLoader.tintColor = tintColor
 		
 		currentTimeLabel.textColor = tintColor
@@ -476,17 +394,11 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 		lengthLabel.textAlignment = .center
 		lengthLabel.font = timeFont
 		
-		playPauseButton.addTarget(self, action: #selector(ASPVideoPlayerControls.playButtonPressed), for: .touchUpInside)
-		nextButton.addTarget(self, action: #selector(ASPVideoPlayerControls.nextButtonPressed), for: .touchUpInside)
-		previousButton.addTarget(self, action: #selector(ASPVideoPlayerControls.previousButtonPressed), for: .touchUpInside)
 		progressSlider.addTarget(self, action: #selector(ASPVideoPlayerControls.progressSliderChanged(slider:)), for: [.valueChanged])
 		progressSlider.addTarget(self, action: #selector(ASPVideoPlayerControls.progressSliderBeginTouch), for: [.touchDown])
 		
 		addSubview(progressLoader)
-		addSubview(playPauseButton)
 		addSubview(progressSlider)
-		addSubview(nextButton)
-		addSubview(previousButton)
 		addSubview(currentTimeLabel)
 		addSubview(lengthLabel)
 		
@@ -494,34 +406,18 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	}
 	
 	private func setupLayout() {
-		let viewsDictionary: [String : Any] = ["playPauseButton":playPauseButton,
-		                                       "progressSlider":progressSlider,
-		                                       "nextButton":nextButton,
-		                                       "previousButton":previousButton,
+		let viewsDictionary: [String : Any] = ["progressSlider":progressSlider,
 		                                       "progressLoader":progressLoader,
 		                                       "currentTimeLabel":currentTimeLabel,
 		                                       "lengthLabel":lengthLabel]
 		
 		var constraintsArray = [NSLayoutConstraint]()
 		
-		constraintsArray.append(NSLayoutConstraint(item: playPauseButton, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1.0, constant: 0.0))
-		constraintsArray.append(NSLayoutConstraint(item: playPauseButton, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1.0, constant: 0.0))
-		
-		constraintsArray.append(NSLayoutConstraint(item: nextButton, attribute: .centerY, relatedBy: .equal, toItem: playPauseButton, attribute: .centerY, multiplier: 1.0, constant: 0.0))
-		constraintsArray.append(NSLayoutConstraint(item: previousButton, attribute: .centerY, relatedBy: .equal, toItem: playPauseButton, attribute: .centerY, multiplier: 1.0, constant: 0.0))
-		
 		constraintsArray.append(NSLayoutConstraint(item: progressLoader, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1.0, constant: 0.0))
 		constraintsArray.append(NSLayoutConstraint(item: progressLoader, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1.0, constant: 0.0))
 		constraintsArray.append(NSLayoutConstraint(item: progressLoader, attribute: .width, relatedBy: .equal, toItem: progressLoader, attribute: .height, multiplier: 1.0, constant: 0.0))
 		
 		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[progressLoader(==60)]", options: [], metrics: nil, views: viewsDictionary))
-		
-		
-		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "H:[previousButton(==playPauseButton)]-50-[playPauseButton(==66)]-50-[nextButton(==playPauseButton)]", options: [], metrics: nil, views: viewsDictionary))
-		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[playPauseButton(==78)]", options: [], metrics: nil, views: viewsDictionary))
-		
-		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[nextButton(==66)]", options: [], metrics: nil, views: viewsDictionary))
-		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[previousButton(==nextButton)]", options: [], metrics: nil, views: viewsDictionary))
 		
 		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "H:|-[currentTimeLabel(==lengthLabel)]-10-[progressSlider]-10-[lengthLabel]-|", options: [], metrics: nil, views: viewsDictionary))
 		constraintsArray.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[progressSlider(==40)]-6-|", options: [], metrics: nil, views: viewsDictionary))
@@ -532,14 +428,6 @@ open class ASPBasicControls: UIView, VideoPlayerControls, VideoPlayerSeekControl
 	}
 	
 	//MARK: - Closure notifications -
-	
-	fileprivate func notifyOfDidPressNextButton() {
-		didPressNextButtonClosures.forEach({ $0() })
-	}
-	
-	fileprivate func notifyOfDidPressPreviousButton() {
-		didPressPreviousButtonClosures.forEach({ $0() })
-	}
 	
 	fileprivate func notifyOfInteracting(_ interacting: Bool) {
 		interactingClosures.forEach({ $0(interacting) })
