@@ -24,6 +24,12 @@ import AVFoundation
     public typealias VoidClosure = () -> ()
     
     /**
+     Count closure type.
+     - Parameter count: The count of the item (e.g. loop count)
+     */
+    public typealias CountClosure = (_ count: Int) -> ()
+    
+    /**
      Closure type for recurring actions.
      - Parameter progress: The progress indicator value. Value is in range [0.0, 1.0].
      */
@@ -188,6 +194,21 @@ import AVFoundation
     }
     
     /**
+     Enqueues a closure that will be called when a video is looped (since `finishedVideo` won't be called for this event).
+     
+     Note: a `nil` value will clear all enqueued closures of this type.
+     */
+    open var loopedVideo: CountClosure? {
+        didSet {
+            guard let closure = loopedVideo else {
+                loopedVideoClosures.removeAll()
+                return
+            }
+            loopedVideoClosures.append(closure)
+        }
+    }
+    
+    /**
      Enqueues a closure that will be called when the end of the video has been reached.
      
      Note: a `nil` value will clear all enqueued closures of this type.
@@ -293,7 +314,8 @@ import AVFoundation
                 return
             }
             
-            currentVideoItem = nil
+            // Important: you must disable looping (and stop video) or you'll get obscure crashes
+            stopVideo()
             removeObservers()
             
             // Asynchronously load the item and get it ready for playing
@@ -377,6 +399,7 @@ import AVFoundation
     private var bufferingVideoClosures = [VoidClosure]()
     private var bufferingVideoFinishedClosures = [VoidClosure]()
     private var pausedVideoClosures = [VoidClosure]()
+    private var loopedVideoClosures = [CountClosure]()
     private var finishedVideoClosures = [VoidClosure]()
     private var stoppedVideoClosures = [VoidClosure]()
     private var seekStartedClosures = [VoidClosure]()
@@ -406,6 +429,8 @@ import AVFoundation
     private let playbackBufferEmptyKey = "playbackBufferEmpty"
     private let playbackLikelyToKeepUpKey = "playbackLikelyToKeepUp"
     private var kvoContext = "AVPlayerItemContext"
+    
+    private let loopCount = "loopCount"
     
     private let assetTracksKey = "tracks"
     private let assetPlayableKey = "playable"
@@ -476,6 +501,9 @@ import AVFoundation
      Stops the video.
      */
     open func stopVideo() {
+        // Important: you must disable looping or you'll get obscure crashes
+        looper?.disableLooping()
+        
         videoPlayerLayer.player?.rate = 0.0
         seekToZero()
         status = .stopped
@@ -510,21 +538,26 @@ import AVFoundation
     
     open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard context == &kvoContext,
-              let aspKeyPath = keyPath,
-              let item = object as? AVPlayerItem
+              let aspKeyPath = keyPath
             else {
                 super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
                 return
         }
         
-        switch aspKeyPath {
-        case statusKey:
-            handleStatusChange(for: item)
-        case playbackBufferEmptyKey:
-            notifyOfBufferingVideo()
-        case playbackLikelyToKeepUpKey:
-            notifyOfBufferingVideoFinished()
-        default:
+        if let item = object as? AVPlayerItem {
+            switch aspKeyPath {
+            case statusKey:
+                handleStatusChange(for: item)
+            case playbackBufferEmptyKey:
+                notifyOfBufferingVideo()
+            case playbackLikelyToKeepUpKey:
+                notifyOfBufferingVideoFinished()
+            default:
+                super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+            }
+        } else if let looper = object as? AVPlayerLooper, aspKeyPath == loopCount {
+            notifyOfLoopedVideo(looper.loopCount)
+        } else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
     }
@@ -535,6 +568,8 @@ import AVFoundation
         item.addObserver(self, forKeyPath: playbackBufferEmptyKey, options: [], context: &kvoContext)
         item.addObserver(self, forKeyPath: playbackLikelyToKeepUpKey, options: [], context: &kvoContext)
         
+        looper?.addObserver(self, forKeyPath: loopCount, options: [], context: &kvoContext)
+        
         addedKVObservers = true
     }
     
@@ -543,6 +578,9 @@ import AVFoundation
         currentItem.removeObserver(self, forKeyPath: statusKey)
         currentItem.removeObserver(self, forKeyPath: playbackBufferEmptyKey)
         currentItem.removeObserver(self, forKeyPath: playbackLikelyToKeepUpKey)
+        
+        looper?.removeObserver(self, forKeyPath: loopCount)
+        
         addedKVObservers = false
     }
     
@@ -686,6 +724,10 @@ import AVFoundation
     
     fileprivate func notifyOfPausedVideo() {
         pausedVideoClosures.forEach({ $0() })
+    }
+    
+    fileprivate func notifyOfLoopedVideo(_ count: Int) {
+        loopedVideoClosures.forEach({ $0(count) })
     }
     
     fileprivate func notifyOfFinishedVideo() {
