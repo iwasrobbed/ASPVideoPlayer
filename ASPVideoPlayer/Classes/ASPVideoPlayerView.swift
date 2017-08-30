@@ -342,11 +342,11 @@ import AVFoundation
         didSet {
             switch gravity {
             case .aspectFill:
-                videoGravity = AVLayerVideoGravityResizeAspectFill
+                videoGravity = AVLayerVideoGravity.resizeAspectFill
             case .aspectFit:
-                videoGravity = AVLayerVideoGravityResizeAspect
+                videoGravity = AVLayerVideoGravity.resizeAspect
             case .resize:
-                videoGravity = AVLayerVideoGravityResize
+                videoGravity = AVLayerVideoGravity.resize
             }
             
             videoPlayerLayer.videoGravity = videoGravity
@@ -417,7 +417,7 @@ import AVFoundation
     
     private var animationForwarder: AnimationForwarder?
     
-    private var videoGravity = AVLayerVideoGravityResizeAspectFill
+    private var videoGravity = AVLayerVideoGravity.resizeAspectFill
     
     private var timeObserver: AnyObject?
     
