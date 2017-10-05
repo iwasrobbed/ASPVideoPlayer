@@ -329,7 +329,7 @@ import AVFoundation
                 strongSelf.videoPlayerLayer.player?.rate = 0.0
                 strongSelf.videoPlayerLayer.videoGravity = strongSelf.videoGravity
                 
-                strongSelf.addKVObservers()
+                strongSelf.addKVObservers(to: item)
                 strongSelf.notifyOfNewVideo()
             }
         }
@@ -534,8 +534,8 @@ import AVFoundation
     
     //MARK: - KeyValueObserving methods -
     
-    fileprivate func addKVObservers() {
-        guard addedKVObservers == false, let currentItem = currentVideoItem else { return }
+    fileprivate func addKVObservers(to item: AVPlayerItem?) {
+        guard addedKVObservers == false, let item = item else { return }
         
         statusObserver = item.observe(\.status) { (playerItem, change) in
             self.handleStatusChange(for: playerItem)
