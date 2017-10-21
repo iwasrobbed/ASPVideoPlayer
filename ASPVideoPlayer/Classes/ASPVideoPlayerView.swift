@@ -324,7 +324,8 @@ import AVFoundation
                 
                 strongSelf.currentVideoItem = item
                 let queuePlayer = AVQueuePlayer(playerItem: item)
-                strongSelf.looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
+                // The looper is the bug :(
+                //strongSelf.looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
                 strongSelf.videoPlayerLayer.player = queuePlayer
                 strongSelf.videoPlayerLayer.player?.rate = 0.0
                 strongSelf.videoPlayerLayer.videoGravity = strongSelf.videoGravity
@@ -687,12 +688,34 @@ import AVFoundation
               notificationItem == currentItem
             else { return }
         
+        loopFromBeginning()
         notifyOfFinishedVideo()
     }
     
     @objc internal func itemFailedToPlayToEndTime(_ notification: Notification) {
         let errorMessage = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey]
         generateError(message: "Playback of the video failed. Error: \(String(describing: errorMessage))")
+    }
+    
+    fileprivate func loopFromBeginning() {
+        guard let currentItem = currentVideoItem else { return }
+        
+        swapCurrentItem(for: currentItem)
+        playVideo()
+    }
+    
+    fileprivate func swapCurrentItem(for newItem: AVPlayerItem) {
+        guard let player = videoPlayerLayer.player as? AVQueuePlayer else { return }
+        
+        // Note: using an AVQueuePlayer in this way will allow for mostly seamless looping
+        removeKVObservers()
+        if let currentItem = player.currentItem {
+            player.remove(currentItem)
+        }
+        newItem.seek(to: kCMTimeZero)
+        player.insert(newItem, after: nil)
+        addKVObservers(to: newItem)
+        notifyOfNewVideo()
     }
     
     //MARK: - Closure notifications -
