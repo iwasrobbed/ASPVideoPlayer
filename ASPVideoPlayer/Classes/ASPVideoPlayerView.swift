@@ -299,7 +299,7 @@ import AVFoundation
      The url of the currently playing video.
      */
     open var currentVideoURL: URL? {
-        guard let urlAsset = currentVideoItem?.asset as? AVURLAsset else { return nil }
+        guard let urlAsset = player?.currentItem?.asset as? AVURLAsset else { return nil }
         
         return urlAsset.url
     }
@@ -322,13 +322,18 @@ import AVFoundation
             loadAsset(for: url) { [weak self] playerItem in
                 guard let strongSelf = self, let item = playerItem else { return }
                 
-                strongSelf.currentVideoItem = item
-                let queuePlayer = AVQueuePlayer(playerItem: item)
-                // The looper is the bug :(
-                //strongSelf.looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
-                strongSelf.videoPlayerLayer.player = queuePlayer
-                strongSelf.videoPlayerLayer.player?.rate = 0.0
+                strongSelf.player = AVQueuePlayer(playerItem: item)
+                guard let player = strongSelf.player else { return }
+                player.rate = 0.0
+                strongSelf.videoPlayerLayer.player = player
                 strongSelf.videoPlayerLayer.videoGravity = strongSelf.videoGravity
+                
+                // Determine the number of items to add in order to create a gapless loop
+                let numberOfPlayerItems = (Int)(1.0 / CMTimeGetSeconds(item.asset.duration)) + 2
+                for _ in 1...numberOfPlayerItems {
+                    let loopItem = AVPlayerItem(asset: item.asset)
+                    player.insert(loopItem, after: nil)
+                }
                 
                 strongSelf.addKVObservers(to: item)
                 strongSelf.notifyOfNewVideo()
@@ -360,10 +365,10 @@ import AVFoundation
     open var volume: Float {
         set {
             let value = min(1.0, max(0.0, newValue))
-            videoPlayerLayer.player?.volume = value
+            player?.volume = value
         }
         get {
-            return videoPlayerLayer.player?.volume ?? 0.0
+            return player?.volume ?? 0.0
         }
     }
     
@@ -371,7 +376,7 @@ import AVFoundation
      The current playback time in seconds.
      */
     open var currentTime: Double {
-        if let time = currentVideoItem?.currentTime() {
+        if let time = player?.currentItem?.currentTime() {
             return time.seconds
         }
         
@@ -382,7 +387,7 @@ import AVFoundation
      The length of the video in seconds.
      */
     open var videoLength: Double {
-        if let duration = currentVideoItem?.asset.duration {
+        if let duration = player?.currentItem?.asset.duration {
             return duration.seconds
         }
         
@@ -407,9 +412,8 @@ import AVFoundation
     private var seekEndedClosures = [VoidClosure]()
     private var errorClosures = [ErrorClosure]()
     
-    private var currentVideoItem: AVPlayerItem?
-    private var looper: AVPlayerLooper?
-    
+    private var player: AVQueuePlayer?
+
     private lazy var videoPlayerLayer: AVPlayerLayer = { [unowned self] in
         let layer = AVPlayerLayer()
         layer.videoGravity = self.videoGravity
@@ -480,11 +484,11 @@ import AVFoundation
         }
         
         status = .playing
-        videoPlayerLayer.player?.rate = 1.0
+        player?.rate = 1.0
         notifyOfStartedVideo()
         
         NotificationCenter.default.removeObserver(self)
-        if let currentItem = currentVideoItem {
+        if let currentItem = player?.currentItem {
             addNotificationObservers(to: currentItem)
         }
     }
@@ -493,7 +497,7 @@ import AVFoundation
      Pauses the video.
      */
     open func pauseVideo() {
-        videoPlayerLayer.player?.rate = 0.0
+        player?.rate = 0.0
         status = .paused
         notifyOfPausedVideo()
     }
@@ -502,10 +506,7 @@ import AVFoundation
      Stops the video.
      */
     open func stopVideo() {
-        // Important: you must disable looping or you'll get obscure crashes
-        looper?.disableLooping()
-        
-        videoPlayerLayer.player?.rate = 0.0
+        player?.rate = 0.0
         seekToZero()
         status = .stopped
         notifyOfStoppedVideo()
@@ -516,13 +517,13 @@ import AVFoundation
      */
     open func seek(_ percentage: Double) {
         progress = min(1.0, max(0.0, percentage))
-        if let currentItem = currentVideoItem {
+        if let currentItem = player?.currentItem {
             if progress == 0.0 {
                 seekToZero()
                 notifyOfPlayingVideo(progress)
             } else {
                 let time = CMTime(seconds: progress * currentItem.asset.duration.seconds, preferredTimescale: currentItem.asset.duration.timescale)
-                videoPlayerLayer.player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: { [weak self] (finished) in
+                player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: { [weak self] (finished) in
                     guard let strongSelf = self else { return }
                     if finished == false {
                         strongSelf.notifyOfSeekStarted()
@@ -568,25 +569,21 @@ import AVFoundation
         item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
         item.addObserver(self, forKeyPath: playbackBufferEmptyKey, options: [], context: &kvoContext)
         item.addObserver(self, forKeyPath: playbackLikelyToKeepUpKey, options: [], context: &kvoContext)
-        
-        looper?.addObserver(self, forKeyPath: loopCount, options: [], context: &kvoContext)
-        
+
         addedKVObservers = true
     }
     
     fileprivate func removeKVObservers() {
-        guard addedKVObservers, let currentItem = currentVideoItem else { return }
+        guard addedKVObservers, let currentItem = player?.currentItem else { return }
         currentItem.removeObserver(self, forKeyPath: statusKey)
         currentItem.removeObserver(self, forKeyPath: playbackBufferEmptyKey)
         currentItem.removeObserver(self, forKeyPath: playbackLikelyToKeepUpKey)
-        
-        looper?.removeObserver(self, forKeyPath: loopCount)
-        
+
         addedKVObservers = false
     }
     
     fileprivate func handleStatusChange(for item: AVPlayerItem) {
-        guard let currentItem = currentVideoItem, currentItem == item else { return }
+        guard let currentItem = player?.currentItem, currentItem == item else { return }
         
         if item.status == .readyToPlay {
             if status == .new {
@@ -650,15 +647,15 @@ import AVFoundation
     fileprivate func seekToZero() {
         progress = 0.0
         let time = CMTime(seconds: 0.0, preferredTimescale: 1)
-        videoPlayerLayer.player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+        player?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
     }
     
     fileprivate func addTimeObserver() {
         if let observer = timeObserver {
-            videoPlayerLayer.player?.removeTimeObserver(observer)
+            player?.removeTimeObserver(observer)
         }
         
-        timeObserver = videoPlayerLayer.player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.01, preferredTimescale: Int32(NSEC_PER_SEC)), queue: nil, using: { [weak self] (time) in
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.01, preferredTimescale: Int32(NSEC_PER_SEC)), queue: nil, using: { [weak self] (time) in
             guard let strongSelf = self , strongSelf.status == .playing else { return }
             
             let currentTime = time.seconds
@@ -677,14 +674,14 @@ import AVFoundation
         NotificationCenter.default.removeObserver(self)
         removeKVObservers()
         if let observer = timeObserver {
-            videoPlayerLayer.player?.removeTimeObserver(observer)
+            player?.removeTimeObserver(observer)
             timeObserver = nil
         }
     }
     
     @objc internal func itemDidFinishPlaying(_ notification: Notification) {
         guard let notificationItem = notification.object as? AVPlayerItem,
-              let currentItem = currentVideoItem,
+              let currentItem = player?.currentItem,
               notificationItem == currentItem
             else { return }
         
@@ -698,14 +695,14 @@ import AVFoundation
     }
     
     fileprivate func loopFromBeginning() {
-        guard let currentItem = currentVideoItem else { return }
+        guard let currentItem = player?.currentItem else { return }
         
         swapCurrentItem(for: currentItem)
         playVideo()
     }
     
     fileprivate func swapCurrentItem(for newItem: AVPlayerItem) {
-        guard let player = videoPlayerLayer.player as? AVQueuePlayer else { return }
+        guard let player = self.player else { return }
         
         // Note: using an AVQueuePlayer in this way will allow for mostly seamless looping
         removeKVObservers()
@@ -714,8 +711,10 @@ import AVFoundation
         }
         newItem.seek(to: kCMTimeZero)
         player.insert(newItem, after: nil)
-        addKVObservers(to: newItem)
-        notifyOfNewVideo()
+        if let newCurrentItem = player.currentItem {
+            addKVObservers(to: newCurrentItem)
+            notifyOfNewVideo()
+        }
     }
     
     //MARK: - Closure notifications -

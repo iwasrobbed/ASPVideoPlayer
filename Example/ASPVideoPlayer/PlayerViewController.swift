@@ -17,7 +17,7 @@ class PlayerViewController: UIViewController {
 		super.viewDidLoad()
 		
 		guard let videoPlayer = videoPlayer,
-			  let firstNetworkURL = Bundle.main.url(forResource: "video", withExtension: "mp4")//URL(string: "https://d2js9x33ub8wlt.cloudfront.net/lessons/SharpeningAndHoning/HoldingKnivesRollingOff.mp4")
+			  let firstNetworkURL = URL(string: "https://d2js9x33ub8wlt.cloudfront.net/lessons/SharpeningAndHoning/HoldingKnivesRollingOff.mp4")
 			else { return }
 		
 		videoPlayer.videoURL = firstNetworkURL
