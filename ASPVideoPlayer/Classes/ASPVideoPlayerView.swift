@@ -430,12 +430,10 @@ import AVFoundation
     // then safely remove it, so this is an alternative way
     private var addedKVObservers = false
     
-    private let statusKey = "status"
-    private let playbackBufferEmptyKey = "playbackBufferEmpty"
-    private let playbackLikelyToKeepUpKey = "playbackLikelyToKeepUp"
-    private var kvoContext = "AVPlayerItemContext"
-    
-    private let loopCount = "loopCount"
+    private var statusObserver: NSKeyValueObservation?
+    private var playbackBufferEmptyObserver: NSKeyValueObservation?
+    private var playbackLikelyToKeepUpObserver: NSKeyValueObservation?
+    private var loopCountObserver: NSKeyValueObservation?
     
     private let assetTracksKey = "tracks"
     private let assetPlayableKey = "playable"
@@ -512,6 +510,11 @@ import AVFoundation
         notifyOfStoppedVideo()
     }
     
+    /// Stops any current video and resets the player
+    open func clearVideo() {
+        player?.removeAllItems()
+    }
+    
     /**
      Seek to specific position in video. Should be a value in the range [0.0, 1.0].
      */
@@ -538,46 +541,36 @@ import AVFoundation
     
     //MARK: - KeyValueObserving methods -
     
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        guard context == &kvoContext,
-              let aspKeyPath = keyPath
-            else {
-                super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-                return
-        }
-        
-        if let item = object as? AVPlayerItem {
-            switch aspKeyPath {
-            case statusKey:
-                handleStatusChange(for: item)
-            case playbackBufferEmptyKey:
-                notifyOfBufferingVideo()
-            case playbackLikelyToKeepUpKey:
-                notifyOfBufferingVideoFinished()
-            default:
-                super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-            }
-        } else if let looper = object as? AVPlayerLooper, aspKeyPath == loopCount {
-            notifyOfLoopedVideo(looper.loopCount)
-        } else {
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-        }
-    }
-    
     fileprivate func addKVObservers(to item: AVPlayerItem?) {
         guard addedKVObservers == false, let item = item else { return }
-        item.addObserver(self, forKeyPath: statusKey, options: [], context: &kvoContext)
-        item.addObserver(self, forKeyPath: playbackBufferEmptyKey, options: [], context: &kvoContext)
-        item.addObserver(self, forKeyPath: playbackLikelyToKeepUpKey, options: [], context: &kvoContext)
+        
+        statusObserver = item.observe(\.status) { (playerItem, change) in
+            self.handleStatusChange(for: playerItem)
+        }
+        
+        playbackBufferEmptyObserver = item.observe(\.playbackBufferEmpty) { (playerItem, change) in
+            self.notifyOfBufferingVideo()
+        }
+        
+        playbackLikelyToKeepUpObserver = item.observe(\.playbackLikelyToKeepUp) { (playerItem, change) in
+            self.notifyOfBufferingVideoFinished()
+        }
+        
+        // TODO: Re-enable after we use a looper again
+//        loopCountObserver = looper?.observe(\.loopCount) { (looper, change) in
+//            self.notifyOfLoopedVideo(looper.loopCount)
+//        }
 
         addedKVObservers = true
     }
     
     fileprivate func removeKVObservers() {
-        guard addedKVObservers, let currentItem = player?.currentItem else { return }
-        currentItem.removeObserver(self, forKeyPath: statusKey)
-        currentItem.removeObserver(self, forKeyPath: playbackBufferEmptyKey)
-        currentItem.removeObserver(self, forKeyPath: playbackLikelyToKeepUpKey)
+        guard addedKVObservers else { return }
+        
+        statusObserver?.invalidate()
+        playbackBufferEmptyObserver?.invalidate()
+        playbackLikelyToKeepUpObserver?.invalidate()
+        loopCountObserver?.invalidate()
 
         addedKVObservers = false
     }
